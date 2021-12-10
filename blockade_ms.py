@@ -112,6 +112,9 @@ class Game:
                 self.isPlayerOneNext = not self.isPlayerOneNext
 
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
+        if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
+            return False
+
         if (self.isPlayerOneNext and self.board.player1.type != playerType) or (
             not self.isPlayerOneNext and self.board.player2.type != playerType
         ):
@@ -120,11 +123,21 @@ class Game:
 
         player = self.board.player1 if playerType == "x" else self.board.player2
         otherPlayer = self.board.player2 if playerType == "x" else self.board.player1
-
+        if player.positions[playerNumber] == player.positions[abs(playerNumber-1)]:
+            return False
         if len(wallPosition) == 0 and (player.greenWallNumber > 0 or player.blueWallNumber > 0):
             print("Niste uneli pozicije zida")
             return False
+        if not self.isValidWallMove(player, wallPosition, wallType):
+            return False
+        # zid se postavlja na validnu poziciju
+        # provera da li se pesak pomera na validnu poziciju
+        otherPlayerStart = self.board.startPositionO if playerType == "x" else self.board.startPositionX
+        if not self.isValidPlayerMove(player.positions[playerNumber], playerPosition, otherPlayer.positions, otherPlayerStart):
+            return False
+        return True
 
+    def isValidWallMove(self, player, wallPosition, wallType):
         if len(wallPosition) == 2:
             if (player.greenWallNumber == 0 and wallType == "z") or (player.blueWallNumber == 0 and wallType == "p"):
                 print("Iskoristili ste sve zidove ove boje")
@@ -152,29 +165,46 @@ class Game:
                 if len(list(filter(lambda w: w.type == "p" and wallPosition[0]-1 == w.position[0] and wallPosition[1]+1 == w.position[1], allWalls))) > 0:
                     print("Na tabli postoji zid koji zauzima ovu poziciju")
                     return False
-            # zid se postavlja na validnu poziciju
-            # provera da li se pesak pomera na validnu poziciju
-            if playerPosition[0] < 0 or playerPosition[0] > self.board.m-1 or playerPosition[1] < 0 or playerPosition[1] > self.board.n-1:
-                print("Pozicije zida su van okvira table")
-                return False
-            if playerNumber != 0 and playerNumber != 1:
-                return False
-            currentPosition = player.positions[playerNumber]
-            movedX = abs(int(currentPosition[0])-playerPosition[0])
-            movedY = abs(int(currentPosition[1])-playerPosition[1])
-            if (movedX == 0 and movedY == 2) or (movedX == 2 and movedY == 0) or (movedX == movedY == 1):
-                # validan potez
-                # moze da bude i validan ako je rastojanje 1-proveriti da li je pesak na sledecem pa znaci da je blokiran i moze samo jedno polje
-                # proveriti da li postoji zid izmedju ovih pozicija
-                # proveriti da li je ciljno polje zauzeto, ako je zauzeto proveriti da li je pocetno polje protivnika
-                # if len(list(filter(lambda p:p==playerPosition,otherPlayer.positions)))==0:
-                return True
-            else:
+            return True
+
+    def isValidPlayerMove(self, currentPosition, nextPosition, otherPlayerPositions, otherPlayerStart):
+        if nextPosition[0] < 0 or nextPosition[0] > self.board.m-1 or nextPosition[1] < 0 or nextPosition[1] > self.board.n-1:
+            print("Pozicije zida su van okvira table")
+            return False
+
+        movedY = abs(int(currentPosition[0])-nextPosition[0])
+        movedX = abs(int(currentPosition[1])-nextPosition[1])
+        if movedX == movedY == 0:
+            return False
+        # jedno ili dva polja u levo/desno/gore/dole ili dijagonalno
+        if movedX == 0 or movedY == 0 or movedX == movedY == 1:
+            if movedX == movedY == 1:  # dijagonalno
+                return True  # PROVERITI da li je blokirano zidom.. kako??
+            elif movedX == 1 or movedY == 1:  # jedno polje levo/desno/gore/dole
+                if self.isBlockedByWall("p" if movedX == 0 else "z", currentPosition, nextPosition):
+                    return False
+                else:
+                    return True  # PROVERI da li je blokiran pesakom
+
+            elif movedX == 2 or movedY == 2:  # dva polja levo/desno/gore/dole
+                if self.isBlockedByWall("p" if movedX == 0 else "z", currentPosition, nextPosition):
+                    return False
+
+            if nextPosition in otherPlayerPositions:
+                if nextPosition in otherPlayerStart:
+                    # DA LI treba ukloniti protivnickog igraca??
+                    return True
                 return False
 
-        # da li moze pozicije
+            return True
+        else:
+            return False
 
-        return True
+    def isBlockedByWall(self, type, position, nextPosition):
+        if type == "p" and len(list(filter(lambda w: w.type == type and (w.position[1] == position[1] or w.position[1]+1 == position[1]) and (w.position[0] in range(*sorted(position[0], nextPosition[0]))), self.board.walls))) > 0:
+            return False
+        elif type == "z" and len(list(filter(lambda w: w.type == type and (w.position[0] == position[0] or w.position[0]+1 == position[0]) and (w.position[1] in range(*sorted(position[1], nextPosition[1]))), self.board.walls))) > 0:
+            return False
 
     def changeBoardState(self, playerNumber, playerPosition, wallPosition, wallType):
         if self.isPlayerOneNext:
@@ -200,5 +230,3 @@ game.getStartState()
 game.board.walls.append(Wall((5, 3), "p"))
 game.board.walls.append(Wall((2, 3), "z"))
 game.nextMove()
-
-print("")
