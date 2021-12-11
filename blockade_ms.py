@@ -2,27 +2,27 @@ import re
 
 
 class Wall:
-    def __init__(self, position, type):
+    def __init__(self, position: tuple[int, int], type):
         self.position = position
         self.type = type
 
 
 class Player:
-    def __init__(self, positions, type, k):
+    def __init__(self, positions: tuple[list[int], list[int]], type, num_walls):
         self.positions = positions
         self.type = type
-        self.greenWallNumber = k
-        self.blueWallNumber = k
+        self.greenWallNumber = num_walls
+        self.blueWallNumber = num_walls
 
 
 class Board:
-    def __init__(self, m, n, position1, position2, k, first):
+    def __init__(self, m, n, positions_p1: tuple[list[int], list[int]], positions_p2: tuple[list[int], list[int]], num_walls: int, first):
         self.m = m
         self.n = n
-        self.startPositionX = position1
-        self.startPositionO = position2
-        self.player1 = Player(position1, "x" if first else "o", k)
-        self.player2 = Player(position2, "o" if first else "x", k)
+        self.startPositionsX = positions_p1
+        self.startPositionsO = positions_p2
+        self.player1 = Player(positions_p1, "x" if first else "o", num_walls)
+        self.player2 = Player(positions_p2, "o" if first else "x", num_walls)
         self.walls = []
 
 
@@ -32,54 +32,56 @@ class Game:
         self.isPlayerOneNext = None
 
     def getStartState(self):
-        m = 23
-        while m > 21:
-            print("Unesite sirinu table. Sirina mora biti manja od 22.")
-            m = 14  # int(input())
+        print("Unesite broj vrsta table :")
+        m = int(input())
+        while m > 22 or m < 11:
+            print("Broj vrsta mora biti izmedju 11 i 22!")
+            m = int(input())
 
-        n = 30
-        while n > 27:
-            print("Unesite visinu table. Visina mora biti manja od 28.")
-            n = 13  # int(input())
+        print("Unesite broj kolona table :")
+        n = int(input())
+        while n > 28 or n < 14:
+            print("Broj kolona mora biti izmedju 14 i 28!")
+            n = int(input())
 
-        k = 19
-        while k > 18:
-            print("Unesite broj zidova po igracu. Maksimalno 18.")
-            k = 8  # int(input())
+        print("Unesite broj zidova : ")
+        k = int(input())
+        while k > 18 or k < 9:
+            print("Unesite broj zidova mora biti izmedju 9 i 18")
+            k = int(input())
 
-        first = None
-        while not first:
-            print('Da li zelite da igrate prvi? Unesite "da" ili "ne" ')
-            first = "da"  # input().lower()
+        print('Da li zelite da igrate prvi? Unesite "da" ili "ne" ')
+        first = True if str(input()).lower() == "da" else False
 
         playerPositions = []
         while len(playerPositions) < 4:
             print("Unesite pocetne pozicije vasih igraca x1 y1 x2 y2 ")
             position = "1 2 3 4"  # input()
-            playerPositions = re.findall(r"(\d+)", position)
-        playerPositions = list(
-            zip(playerPositions[0::2], playerPositions[1::2]))
+            playerPositions = list(
+                map(lambda x: int(x), re.findall(r"(\d+)", position)))
+        playerPositions = ([playerPositions[0], playerPositions[1]], [
+                           playerPositions[2], playerPositions[3]])
 
         otherPlayerPositions = []
         while len(otherPlayerPositions) < 4:
             print("Unesite pocetne pozicije protivnickih igraca x1 y1 x2 y2 ")
             position = "5 6 7 8"  # input()
-            otherPlayerPositions = re.findall(r"(\d+)", position)
-        otherPlayerPositions = list(
-            zip(otherPlayerPositions[0::2], otherPlayerPositions[1::2])
-        )
+            otherPlayerPositions = list(
+                map(lambda x: int(x), re.findall(r"(\d+)", position)))
+        otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [
+                                otherPlayerPositions[2], otherPlayerPositions[3]])
 
-        self.isPlayerOneNext = True if (first == "da") else False
         self.setBoard(Board(m, n, playerPositions,
-                      otherPlayerPositions, k, self.isPlayerOneNext))
+                      otherPlayerPositions, k, first))
+        self.isPlayerOneNext = True if (first) else False
 
     def isEnd(self):
         return bool(
             set(self.board.player1.positions).intersection(
-                set(self.board.startPositionO)
+                set(self.board.startPositionsO)
             )
             or set(self.board.player2.positions).intersection(
-                set(self.board.startPositionX)
+                set(self.board.startPositionsX)
             )
         )
 
@@ -132,7 +134,7 @@ class Game:
             return False
         # zid se postavlja na validnu poziciju
         # provera da li se pesak pomera na validnu poziciju
-        otherPlayerStart = self.board.startPositionO if playerType == "x" else self.board.startPositionX
+        otherPlayerStart = self.board.startPositionsO if playerType == "x" else self.board.startPositionsX
         if not self.isValidPlayerMove(player.positions[playerNumber], playerPosition, otherPlayer.positions, otherPlayerStart):
             return False
         return True
@@ -172,18 +174,30 @@ class Game:
             print("Pozicije zida su van okvira table")
             return False
 
-        movedY = abs(int(currentPosition[0])-nextPosition[0])
-        movedX = abs(int(currentPosition[1])-nextPosition[1])
-        if movedX == movedY == 0:
-            return False
+        #currentPosition[0] = int(currentPosition[0])
+        #currentPosition[1] = int(currentPosition[1])
+        movedY = abs(currentPosition[0]-nextPosition[0])
+        movedX = abs(currentPosition[1]-nextPosition[1])
+
         # jedno ili dva polja u levo/desno/gore/dole ili dijagonalno
         if movedX == 0 or movedY == 0 or movedX == movedY == 1:
             if movedX == movedY == 1:  # dijagonalno
-                return True  # PROVERITI da li je blokirano zidom.. kako??
+                if self.isBlockedByWall("p", currentPosition, (nextPosition[0], currentPosition[1])):
+                    if self.isBlockedByWall("p", (currentPosition[0], nextPosition[1]), nextPosition) or self.isBlockedByWall("p", currentPosition, (currentPosition[0], nextPosition[1])):
+                        return False
+                elif self.isBlockedByWall("z", (nextPosition[0], currentPosition[1]), nextPosition):
+                    if self.isBlockedByWall("z", currentPosition, (currentPosition[0], nextPosition[1])) or self.isBlockedByWall("z", (currentPosition[0], nextPosition[1]), nextPosition):
+                        return False
+                return True  # Nije blokiran zidom
             elif movedX == 1 or movedY == 1:  # jedno polje levo/desno/gore/dole
                 if self.isBlockedByWall("p" if movedX == 0 else "z", currentPosition, nextPosition):
                     return False
                 else:
+                    if movedX == 0:
+                        pos = (
+                            currentPosition[0]-(currentPosition[0]-nextPosition[0])*2, currentPosition[1])
+                        if pos not in otherPlayerPositions:
+                            return False
                     return True  # PROVERI da li je blokiran pesakom
 
             elif movedX == 2 or movedY == 2:  # dva polja levo/desno/gore/dole
@@ -192,7 +206,6 @@ class Game:
 
             if nextPosition in otherPlayerPositions:
                 if nextPosition in otherPlayerStart:
-                    # DA LI treba ukloniti protivnickog igraca??
                     return True
                 return False
 
@@ -227,6 +240,7 @@ class Game:
 
 game = Game()
 game.getStartState()
-game.board.walls.append(Wall((5, 3), "p"))
-game.board.walls.append(Wall((2, 3), "z"))
-game.nextMove()
+#game.board.walls.append(Wall((5, 3), "p"))
+#game.board.walls.append(Wall((2, 3), "z"))
+# game.nextMove()
+game.isValidMove(1, "x", (1, 4), (5, 5), "p")
