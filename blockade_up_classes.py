@@ -57,17 +57,15 @@ class Game:
         while len(playerPositions) < 4:
             print("Unesite pocetne pozicije vasih igraca x1 y1 x2 y2 ")
             position = "1 2 3 4"  # input()
-            playerPositions = re.findall(r"(\d+)", position)
-        playerPositions = tuple(zip(playerPositions[0::2], playerPositions[1::2]))
+            playerPositions = list(map(lambda x : int(x), re.findall(r"(\d+)", position)))
+        playerPositions = ([playerPositions[0], playerPositions[1]], [playerPositions[2], playerPositions[3]])
 
         otherPlayerPositions = []
         while len(otherPlayerPositions) < 4:
             print("Unesite pocetne pozicije protivnickih igraca x1 y1 x2 y2 ")
             position = "5 6 7 8"  # input()
-            otherPlayerPositions = re.findall(r"(\d+)", position)
-        otherPlayerPositions = list(
-            tuple(zip(otherPlayerPositions[0::2], otherPlayerPositions[1::2]))
-        )
+            otherPlayerPositions = list(map(lambda x : int(x), re.findall(r"(\d+)", position)))
+        otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [otherPlayerPositions[2], otherPlayerPositions[3]])
 
         self.setBoard(Board(m, n, playerPositions, otherPlayerPositions, k, first))
         self.isPlayerOneNext = True if (first) else False
@@ -85,7 +83,14 @@ class Game:
     def setBoard(self, board):
         self.board = board
 
-    def nextMove(self):
+
+    def nextMove(self, playerNumber, wallPosition, wallType, playerType, playerPosition):
+        if self.isValidMove(playerNumber, playerType, playerPosition, wallPosition, wallType):
+            self.changeBoardState(playerNumber, playerPosition, wallPosition, wallType)
+            self.isPlayerOneNext = not self.isPlayerOneNext
+
+
+    """  def nextMove(self):
         valid = False
         while not valid:
             print("Unesite sledeci validan potez: X|O 1|2 m n p|z x y")
@@ -108,7 +113,7 @@ class Game:
                 self.changeBoardState(
                     playerNumber, playerPosition, wallPosition, wallType
                 )
-                self.isPlayerOneNext = not self.isPlayerOneNext
+                self.isPlayerOneNext = not self.isPlayerOneNext """
 
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":

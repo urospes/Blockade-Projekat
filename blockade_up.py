@@ -133,28 +133,42 @@ def DrawGameBoard(size: tuple[int, int], player_1: tuple[tuple[int, int]], playe
     p_1_fig_1 = player_1[0]
     c_x = board_rect.left + int(p_1_fig_1[1]) * (const.SQUARE + const.WALL_W) + const.SQUARE // 2
     c_y = board_rect.top + int(p_1_fig_1[0]) * (const.SQUARE + const.WALL_W) + const.SQUARE // 2
-    pygame.draw.circle(screen, "RED", (c_x, c_y), const.SQUARE // 3)
+    p1_f1_rect = pygame.draw.circle(screen, "RED", (c_x, c_y), const.SQUARE // 3)
 
     p_1_fig_2 = player_1[1]
     c_x = board_rect.left + int(p_1_fig_2[1]) * (const.SQUARE + const.WALL_W) + const.SQUARE // 2
     c_y = board_rect.top + int(p_1_fig_2[0]) * (const.SQUARE + const.WALL_W) + const.SQUARE // 2
-    pygame.draw.circle(screen, "RED", (c_x, c_y), const.SQUARE // 3)
+    p1_f2_rect = pygame.draw.circle(screen, "RED", (c_x, c_y), const.SQUARE // 3)
 
     p_2_fig_1 = player_2[0]
     c_x = board_rect.left + int(p_2_fig_1[1]) * (const.SQUARE + const.WALL_W) + const.SQUARE // 2
     c_y = board_rect.top + int(p_2_fig_1[0]) * (const.SQUARE + const.WALL_W) + const.SQUARE // 2
-    pygame.draw.circle(screen, "YELLOW", (c_x, c_y), const.SQUARE // 3)
+    p2_f1_rect = pygame.draw.circle(screen, "YELLOW", (c_x, c_y), const.SQUARE // 3)
 
     p_2_fig_2 = player_2[1]
     c_x = board_rect.left + int(p_2_fig_2[1]) * (const.SQUARE + const.WALL_W) + const.SQUARE // 2
     c_y = board_rect.top + int(p_2_fig_2[0]) * (const.SQUARE + const.WALL_W) + const.SQUARE // 2
-    pygame.draw.circle(screen, "YELLOW", (c_x, c_y), const.SQUARE // 3)
+    p2_f2_rect = pygame.draw.circle(screen, "YELLOW", (c_x, c_y), const.SQUARE // 3)
 
     DrawWalls(board_rect, walls)
+
+    return (p1_f1_rect, p1_f2_rect, p2_f1_rect, p2_f2_rect)
+
+
+
+#funckija za obradu klikova
+def HandleClickEvent(click_pos : tuple[int, int]):
+    return
 
 
 
 #game loop
+red_to_move = True
+yellow_to_move = False
+#move_state je lista koja pamti stanje poteza (prvi element pamti da li je izabran igrac kog zelimo da pomerimo, drugi element pamti da li je izabrano odredisno polje,
+#treci element pokazuje da li je izabran zid). Kada su sva tri elementa True, potez je odigran i prelazimo na drugog igraca
+move_state = [False, False, False]
+
 while True:
 
     for event in pygame.event.get():
@@ -164,11 +178,12 @@ while True:
             exit()
         
         if event.type == pygame.MOUSEBUTTONDOWN:
-            print(event.pos)
+            HandleClickEvent(event.pos)
+            
 
     #draw
     DrawHeader((game.board.player1.greenWallNumber, game.board.player1.blueWallNumber), (game.board.player1.greenWallNumber, game.board.player1.blueWallNumber), game.isPlayerOneNext)
-    DrawGameBoard((game.board.m, game.board.n), game.board.startPositionsX, game.board.startPositionsO, game.board.walls)
+    player_boxes = DrawGameBoard((game.board.m, game.board.n), game.board.player1.positions, game.board.player2.positions, game.board.walls)
 
     #update
     pygame.display.update()
