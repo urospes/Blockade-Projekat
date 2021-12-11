@@ -56,13 +56,32 @@ class Game:
         self.board = board
 
     def nextMove(
-        self, playerNumber, wallPosition, wallType, playerType, playerPosition
+        self, currentPosition, wallPosition, wallType, playerType, playerPosition
     ):
+        if (
+            self.isPlayerOneNext and currentPosition in self.board.player1.positions
+        ) or (
+            not self.isPlayerOneNext and currentPosition in self.board.player2.positions
+        ):
+            if (
+                self.board.player1.positions[0] == currentPosition
+                or self.board.player2.positions[0] == currentPosition
+            ):
+                playerNumber = 0
+            else:
+                playerNumber = 1
+        else:
+            i = list(self.board.player1.positions)
+            j = currentPosition in i
+            return False
         if self.isValidMove(
             playerNumber, playerType, playerPosition, wallPosition, wallType
         ):
+
             self.changeBoardState(playerNumber, playerPosition, wallPosition, wallType)
             self.isPlayerOneNext = not self.isPlayerOneNext
+            return True
+        return False
 
     def isValidMove(
         self, playerNumber, playerType, playerPosition, wallPosition, wallType
@@ -301,7 +320,10 @@ class Game:
         self.board.walls.append(Wall(wallPosition, wallType))
 
     def changePlayerStats(self, player, wallType, playerPosition, playerNumber):
-        player.positions[playerNumber] = playerPosition
+        player.positions = (
+            player.positions[0] if playerNumber else playerPosition,
+            player.positions[1] if not playerNumber else playerPosition,
+        )
         if wallType == "z":
             player.greenWallNumber -= 1
         else:
@@ -332,52 +354,56 @@ class Game:
     #             )
     #             self.isPlayerOneNext = not self.isPlayerOneNext
 
-    # def getStartState(self):
-    #     m = 23
-    #     while m > 21:
-    #         print("Unesite sirinu table. Sirina mora biti manja od 22.")
-    #         m = 14  # int(input())
+    def getStartState(self):
+        m = 23
+        while m > 21:
+            print("Unesite sirinu table. Sirina mora biti manja od 22.")
+            m = 14  # int(input())
 
-    #     n = 30
-    #     while n > 27:
-    #         print("Unesite visinu table. Visina mora biti manja od 28.")
-    #         n = 13  # int(input())
+        n = 30
+        while n > 27:
+            print("Unesite visinu table. Visina mora biti manja od 28.")
+            n = 13  # int(input())
 
-    #     k = 19
-    #     while k > 18:
-    #         print("Unesite broj zidova po igracu. Maksimalno 18.")
-    #         k = 8  # int(input())
+        k = 19
+        while k > 18:
+            print("Unesite broj zidova po igracu. Maksimalno 18.")
+            k = 8  # int(input())
 
-    #     first = None
-    #     while not first:
-    #         print('Da li zelite da igrate prvi? Unesite "da" ili "ne" ')
-    #         first = "da"  # input().lower()
+        first = None
+        while not first:
+            print('Da li zelite da igrate prvi? Unesite "da" ili "ne" ')
+            first = "da"  # input().lower()
 
-    #     playerPositions = []
-    #     while len(playerPositions) < 4:
-    #         print("Unesite pocetne pozicije vasih igraca x1 y1 x2 y2 ")
-    #         position = "1 2 3 4"  # input()
-    #         playerPositions = re.findall(r"(\d+)", position)
-    #     playerPositions = (playerPositions[0::2], playerPositions[1::2])
+        playerPositions = []
+        while len(playerPositions) < 4:
+            print("Unesite pocetne pozicije vasih igraca x1 y1 x2 y2 ")
+            position = "1 2 3 4"  # input()
+            playerPositions = re.findall(r"(\d+)", position)
+            playerPositions = list(map(int, playerPositions))
+        playerPositions = tuple(
+            list(a) for a in zip(playerPositions[0::2], playerPositions[1::2])
+        )
 
-    #     otherPlayerPositions = []
-    #     while len(otherPlayerPositions) < 4:
-    #         print("Unesite pocetne pozicije protivnickih igraca x1 y1 x2 y2 ")
-    #         position = "5 6 7 8"  # input()
-    #         otherPlayerPositions = re.findall(r"(\d+)", position)
-    #     otherPlayerPositions = (
-    #         otherPlayerPositions[0::2],
-    #         otherPlayerPositions[1::2],
-    #     )
+        otherPlayerPositions = []
+        while len(otherPlayerPositions) < 4:
+            print("Unesite pocetne pozicije protivnickih igraca x1 y1 x2 y2 ")
+            position = "5 6 7 8"  # input()
+            otherPlayerPositions = re.findall(r"(\d+)", position)
+            otherPlayerPositions = list(map(int, otherPlayerPositions))
+        otherPlayerPositions = tuple(
+            list(a) for a in zip(otherPlayerPositions[0::2], otherPlayerPositions[1::2])
+        )
 
-    #     self.isPlayerOneNext = True if (first == "da") else False
-    #     self.setBoard(
-    #         Board(m, n, playerPositions, otherPlayerPositions, k, self.isPlayerOneNext)
-    #     )
+        self.isPlayerOneNext = True if (first == "da") else False
+        self.setBoard(
+            Board(m, n, playerPositions, otherPlayerPositions, k, self.isPlayerOneNext)
+        )
 
 
 game = Game()
 game.getStartState()
+game.nextMove([1, 3], [1, 1], "z", "x", [2, 2])
 # game.nextMove()
 
 print("")
