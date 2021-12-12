@@ -57,17 +57,16 @@ class Game:
         while len(playerPositions) < 4:
             print("Unesite pocetne pozicije vasih igraca x1 y1 x2 y2 ")
             position = "1 2 3 4"  # input()
-            playerPositions = list(
-                map(lambda x: int(x), re.findall(r"(\d+)", position)))
+            playerPositions = list(map(int, re.findall(r"(\d+)", position)))
         playerPositions = ([playerPositions[0], playerPositions[1]], [
                            playerPositions[2], playerPositions[3]])
 
         otherPlayerPositions = []
         while len(otherPlayerPositions) < 4:
             print("Unesite pocetne pozicije protivnickih igraca x1 y1 x2 y2 ")
-            position = "3 6 7 8"  # input()
+            position = "5 6 7 8"  # input()
             otherPlayerPositions = list(
-                map(lambda x: int(x), re.findall(r"(\d+)", position)))
+                map(int, re.findall(r"(\d+)", position)))
         otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [
                                 otherPlayerPositions[2], otherPlayerPositions[3]])
 
@@ -88,7 +87,7 @@ class Game:
     def setBoard(self, board):
         self.board = board
 
-    def nextMove(self):
+    """  def nextMove(self):
         valid = False
         while not valid:
             print("Unesite sledeci validan potez: X|O 1|2 m n p|z x y")
@@ -111,7 +110,25 @@ class Game:
                 self.changeBoardState(
                     playerNumber, playerPosition, wallPosition, wallType
                 )
-                self.isPlayerOneNext = not self.isPlayerOneNext
+                self.isPlayerOneNext = not self.isPlayerOneNext """
+
+    def nextMove(self, playerNumber, wallPosition, wallType, playerType, playerPosition):
+        """ if (self.isPlayerOneNext and currentPosition in self.board.player1.positions) or (not self.isPlayerOneNext and currentPosition in self.board.player2.positions):
+            if (self.board.player1.positions[0] == currentPosition) or (self.board.player2.positions[0] == currentPosition):
+                playerNumber = 0
+            else:
+                playerNumber = 1
+        else:
+            i = list(self.board.player1.positions)
+            j = currentPosition in i
+            return False """
+        if self.isValidMove(playerNumber, playerType, playerPosition, wallPosition, wallType):
+
+            self.changeBoardState(
+                playerNumber, playerPosition, wallPosition, wallType)
+            self.isPlayerOneNext = not self.isPlayerOneNext
+            return True
+        return False
 
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
@@ -204,7 +221,7 @@ class Game:
             elif movedX == 2 or movedY == 2:  # dva polja levo/desno/gore/dole
                 if self.isBlockedByWall("p" if movedX == 0 else "z", currentPosition, nextPosition):
                     return False
-            else: #nevalidna pozicija
+            else:  # nevalidna pozicija
                 return False
             if nextPosition in otherPlayerPositions:
                 if nextPosition in otherPlayerStart:
@@ -225,29 +242,20 @@ class Game:
     def changeBoardState(self, playerNumber, playerPosition, wallPosition, wallType):
         if self.isPlayerOneNext:
             self.changePlayerStats(
-                self.board.player1, wallType, playerPosition, playerNumber
-            )
+                self.board.player1, wallType, playerPosition, playerNumber)
         else:
             self.changePlayerStats(
-                self.board.player2, wallType, playerPosition, playerNumber
-            )
-        self.board.walls.append(Wall(wallPosition, wallType))
+                self.board.player2, wallType, playerPosition, playerNumber)
+
+        if(len(wallPosition) == 2):
+            self.board.walls.append(Wall(wallPosition, wallType))
 
     def changePlayerStats(self, player, wallType, playerPosition, playerNumber):
-        player.positions[playerNumber] = playerPosition
+        player.positions = (
+            player.positions[0] if playerNumber else playerPosition,
+            player.positions[1] if not playerNumber else playerPosition,
+        )
         if wallType == "z":
             player.greenWallNumber -= 1
         else:
             player.blueWallNumber -= 1
-
-
-game = Game()
-game.getStartState()
-
-""" game.board.walls.append(Wall((3, 3), "z"))
-game.board.walls.append(Wall((4, 2), "p"))
-game.board.walls.append(Wall((4, 5), "p"))
-game.board.walls.append(Wall((3, 4), "p")) """
-game.board.walls.append(Wall((2, 4), "z"))
-
-print(game.isValidMove(1, "x", (3, 5), (5, 5), "p"))
