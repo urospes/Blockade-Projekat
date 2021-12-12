@@ -65,7 +65,7 @@ class Game:
         otherPlayerPositions = []
         while len(otherPlayerPositions) < 4:
             print("Unesite pocetne pozicije protivnickih igraca x1 y1 x2 y2 ")
-            position = "5 6 7 8"  # input()
+            position = "3 6 7 8"  # input()
             otherPlayerPositions = list(
                 map(lambda x: int(x), re.findall(r"(\d+)", position)))
         otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [
@@ -175,7 +175,6 @@ class Game:
         if nextPosition[0] < 0 or nextPosition[0] > self.board.m-1 or nextPosition[1] < 0 or nextPosition[1] > self.board.n-1:
             print("Pozicije zida su van okvira table")
             return False
-
         movedY = abs(currentPosition[0]-nextPosition[0])
         movedX = abs(currentPosition[1]-nextPosition[1])
 
@@ -183,27 +182,31 @@ class Game:
         if movedX == 0 or movedY == 0 or movedX == movedY == 1:
             if movedX == movedY == 1:  # dijagonalno
                 if self.isBlockedByWall("p", currentPosition, (nextPosition[0], currentPosition[1])):
-                    if self.isBlockedByWall("p", (currentPosition[0], nextPosition[1]), nextPosition) or self.isBlockedByWall("p", currentPosition, (currentPosition[0], nextPosition[1])):
+                    if self.isBlockedByWall("p", (currentPosition[0], nextPosition[1]), nextPosition) or self.isBlockedByWall("z", currentPosition, (currentPosition[0], nextPosition[1])):
                         return False
                 elif self.isBlockedByWall("z", (nextPosition[0], currentPosition[1]), nextPosition):
-                    if self.isBlockedByWall("z", currentPosition, (currentPosition[0], nextPosition[1])) or self.isBlockedByWall("z", (currentPosition[0], nextPosition[1]), nextPosition):
+                    if self.isBlockedByWall("z", currentPosition, (currentPosition[0], nextPosition[1])) or self.isBlockedByWall("p", (currentPosition[0], nextPosition[1]), nextPosition):
                         return False
-                return True  # Nije blokiran zidom
+                # Nije blokiran zidom
             elif movedX == 1 or movedY == 1:  # jedno polje levo/desno/gore/dole
                 if self.isBlockedByWall("p" if movedX == 0 else "z", currentPosition, nextPosition):
                     return False
                 else:
                     if movedX == 0:
-                        pos = (
-                            currentPosition[0]-(currentPosition[0]-nextPosition[0])*2, currentPosition[1])
+                        pos = [
+                            currentPosition[0]-(currentPosition[0]-nextPosition[0])*2, currentPosition[1]]
                         if pos not in otherPlayerPositions:
                             return False
-                    return True  # PROVERI da li je blokiran pesakom
-
+                    elif movedY == 0:
+                        pos = [
+                            currentPosition[0], currentPosition[1]-(currentPosition[1]-nextPosition[1])*2]
+                        if pos not in otherPlayerPositions:
+                            return False
+                    # blokiran je pesakom pa sme jedno polje levo/desno/gore/dole
             elif movedX == 2 or movedY == 2:  # dva polja levo/desno/gore/dole
                 if self.isBlockedByWall("p" if movedX == 0 else "z", currentPosition, nextPosition):
                     return False
-            else:
+            else: #nevalidna pozicija
                 return False
             if nextPosition in otherPlayerPositions:
                 if nextPosition in otherPlayerStart:
@@ -242,8 +245,11 @@ class Game:
 
 game = Game()
 game.getStartState()
-game.board.walls.append(Wall((2, 3), "z"))
+
+""" game.board.walls.append(Wall((3, 3), "z"))
+game.board.walls.append(Wall((4, 2), "p"))
+game.board.walls.append(Wall((4, 5), "p"))
+game.board.walls.append(Wall((3, 4), "p")) """
 game.board.walls.append(Wall((2, 4), "z"))
-#game.board.walls.append(Wall((2, 3), "z"))
-# game.nextMove()
-print(game.isValidMove(1, "x", (2, 5), (5, 3), "p"))
+
+print(game.isValidMove(1, "x", (3, 5), (5, 5), "p"))
