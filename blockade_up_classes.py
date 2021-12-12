@@ -57,17 +57,22 @@ class Game:
         while len(playerPositions) < 4:
             print("Unesite pocetne pozicije vasih igraca x1 y1 x2 y2 ")
             position = "1 2 3 4"  # input()
-            playerPositions = list(map(lambda x : int(x), re.findall(r"(\d+)", position)))
-        playerPositions = ([playerPositions[0], playerPositions[1]], [playerPositions[2], playerPositions[3]])
+            playerPositions = list(
+                map(lambda x: int(x), re.findall(r"(\d+)", position)))
+        playerPositions = ([playerPositions[0], playerPositions[1]], [
+                           playerPositions[2], playerPositions[3]])
 
         otherPlayerPositions = []
         while len(otherPlayerPositions) < 4:
             print("Unesite pocetne pozicije protivnickih igraca x1 y1 x2 y2 ")
             position = "5 6 7 8"  # input()
-            otherPlayerPositions = list(map(lambda x : int(x), re.findall(r"(\d+)", position)))
-        otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [otherPlayerPositions[2], otherPlayerPositions[3]])
+            otherPlayerPositions = list(
+                map(lambda x: int(x), re.findall(r"(\d+)", position)))
+        otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [
+                                otherPlayerPositions[2], otherPlayerPositions[3]])
 
-        self.setBoard(Board(m, n, playerPositions, otherPlayerPositions, k, first))
+        self.setBoard(Board(m, n, playerPositions,
+                      otherPlayerPositions, k, first))
         self.isPlayerOneNext = True if (first) else False
 
     def isEnd(self):
@@ -83,14 +88,7 @@ class Game:
     def setBoard(self, board):
         self.board = board
 
-
-    def nextMove(self, playerNumber, wallPosition, wallType, playerType, playerPosition):
-        if self.isValidMove(playerNumber, playerType, playerPosition, wallPosition, wallType):
-            self.changeBoardState(playerNumber, playerPosition, wallPosition, wallType)
-            self.isPlayerOneNext = not self.isPlayerOneNext
-
-
-    """  def nextMove(self):
+    """ def nextMove(self):
         valid = False
         while not valid:
             print("Unesite sledeci validan potez: X|O 1|2 m n p|z x y")
@@ -114,6 +112,16 @@ class Game:
                     playerNumber, playerPosition, wallPosition, wallType
                 )
                 self.isPlayerOneNext = not self.isPlayerOneNext """
+
+    def nextMove(
+        self, playerNumber, wallPosition, wallType, playerType, playerPosition
+    ):
+        if self.isValidMove(
+            playerNumber, playerType, playerPosition, wallPosition, wallType
+        ):
+            self.changeBoardState(playerNumber, playerPosition, wallPosition, wallType)
+            self.isPlayerOneNext = not self.isPlayerOneNext
+
 
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
@@ -176,18 +184,30 @@ class Game:
             print("Pozicije zida su van okvira table")
             return False
 
-        movedY = abs(int(currentPosition[0])-nextPosition[0])
-        movedX = abs(int(currentPosition[1])-nextPosition[1])
-        if movedX == movedY == 0:
-            return False
+        #currentPosition[0] = int(currentPosition[0])
+        #currentPosition[1] = int(currentPosition[1])
+        movedY = abs(currentPosition[0]-nextPosition[0])
+        movedX = abs(currentPosition[1]-nextPosition[1])
+
         # jedno ili dva polja u levo/desno/gore/dole ili dijagonalno
         if movedX == 0 or movedY == 0 or movedX == movedY == 1:
             if movedX == movedY == 1:  # dijagonalno
-                return True  # PROVERITI da li je blokirano zidom.. kako??
+                if self.isBlockedByWall("p", currentPosition, (nextPosition[0], currentPosition[1])):
+                    if self.isBlockedByWall("p", (currentPosition[0], nextPosition[1]), nextPosition) or self.isBlockedByWall("p", currentPosition, (currentPosition[0], nextPosition[1])):
+                        return False
+                elif self.isBlockedByWall("z", (nextPosition[0], currentPosition[1]), nextPosition):
+                    if self.isBlockedByWall("z", currentPosition, (currentPosition[0], nextPosition[1])) or self.isBlockedByWall("z", (currentPosition[0], nextPosition[1]), nextPosition):
+                        return False
+                return True  # Nije blokiran zidom
             elif movedX == 1 or movedY == 1:  # jedno polje levo/desno/gore/dole
                 if self.isBlockedByWall("p" if movedX == 0 else "z", currentPosition, nextPosition):
                     return False
                 else:
+                    if movedX == 0:
+                        pos = (
+                            currentPosition[0]-(currentPosition[0]-nextPosition[0])*2, currentPosition[1])
+                        if pos not in otherPlayerPositions:
+                            return False
                     return True  # PROVERI da li je blokiran pesakom
 
             elif movedX == 2 or movedY == 2:  # dva polja levo/desno/gore/dole
@@ -196,7 +216,6 @@ class Game:
 
             if nextPosition in otherPlayerPositions:
                 if nextPosition in otherPlayerStart:
-                    # DA LI treba ukloniti protivnickog igraca??
                     return True
                 return False
 
