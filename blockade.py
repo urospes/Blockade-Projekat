@@ -54,22 +54,22 @@ class Game:
         print('Da li zelite da igrate prvi? Unesite "da" ili "ne" ')
         first = True if str(input()).lower() == "da" else False
 
+        labels = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R"]
         playerPositions = []
         while len(playerPositions) < 4:
             print("Unesite pocetne pozicije crvenih igraca x1 y1 x2 y2 ")
             position = input()
-            playerPositions = list(map(int, re.findall(r"(\d+)", position)))
-        playerPositions = ([playerPositions[0], playerPositions[1]], [
-                           playerPositions[2], playerPositions[3]])
+            playerPositions = re.findall(r"(\d+|\w+)", position, re.ASCII)
+            playerPositions = list(map(lambda x: labels.index(x.upper()), playerPositions))
+        playerPositions = ([playerPositions[0], playerPositions[1]], [playerPositions[2], playerPositions[3]])
 
         otherPlayerPositions = []
         while len(otherPlayerPositions) < 4:
             print("Unesite pocetne pozicije zutih igraca x1 y1 x2 y2 ")
             position = input()
-            otherPlayerPositions = list(
-                map(int, re.findall(r"(\d+)", position)))
-        otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [
-                                otherPlayerPositions[2], otherPlayerPositions[3]])
+            otherPlayerPositions = re.findall(r"(\d+|\w+)", position, re.ASCII)
+            otherPlayerPositions = list(map(lambda x: labels.index(x.upper()), otherPlayerPositions))
+        otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [otherPlayerPositions[2], otherPlayerPositions[3]])
 
         self.setBoard(Board(m, n, playerPositions, otherPlayerPositions, k))
         self.isPlayerOneNext = True if (first) else False

@@ -73,7 +73,7 @@ def DrawHeader(p1_walls: tuple[int, int], p2_walls: tuple[int, int], redFirst: b
 def DrawLabels(game_rect: pygame.Rect, size: tuple[int, int], offset: int):
 
     #sve vezano za tablu crtamo u okviru game_rect pravougaonika
-    labels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R"];
+    labels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R"]
 
     #crtamo oznake za vrste i kolone
     label_font = pygame.font.Font(None, const.LABEL_FONT_SIZE)
