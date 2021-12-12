@@ -57,7 +57,7 @@ class Game:
         playerPositions = []
         while len(playerPositions) < 4:
             print("Unesite pocetne pozicije crvenih igraca x1 y1 x2 y2 ")
-            position = "1 2 2 4"  # input()
+            position = input()
             playerPositions = list(map(int, re.findall(r"(\d+)", position)))
         playerPositions = ([playerPositions[0], playerPositions[1]], [
                            playerPositions[2], playerPositions[3]])
@@ -65,8 +65,9 @@ class Game:
         otherPlayerPositions = []
         while len(otherPlayerPositions) < 4:
             print("Unesite pocetne pozicije zutih igraca x1 y1 x2 y2 ")
-            position = "5 6 7 8"  # input()
-            otherPlayerPositions = list(map(int, re.findall(r"(\d+)", position)))
+            position = input()
+            otherPlayerPositions = list(
+                map(int, re.findall(r"(\d+)", position)))
         otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [
                                 otherPlayerPositions[2], otherPlayerPositions[3]])
 
@@ -106,20 +107,18 @@ class Game:
                 )
                 self.isPlayerOneNext = not self.isPlayerOneNext """
 
-    
     def nextMove(self, playerNumber, wallPosition, wallType, playerType, playerPosition):
         if playerType != self.playerToMove:
             return False
 
         if self.isValidMove(playerNumber, playerType, list(playerPosition), wallPosition, wallType):
 
-            self.changeBoardState(playerNumber, playerPosition, wallPosition, wallType, playerType)
+            self.changeBoardState(
+                playerNumber, playerPosition, wallPosition, wallType, playerType)
             self.isPlayerOneNext = not self.isPlayerOneNext
             self.playerToMove = "x" if self.playerToMove == "o" else "o"
             return True
         return False
-
-
 
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
@@ -146,8 +145,6 @@ class Game:
         if not self.isValidPlayerMove(player.positions[playerNumber], playerPosition, otherPlayer.positions, otherPlayerStart):
             return False
         return True
-
-
 
     def isValidWallMove(self, player, wallPosition, wallType):
         if len(wallPosition) == 2:
@@ -179,8 +176,6 @@ class Game:
                     return False
             return True
 
-            
-
     def isValidPlayerMove(self, currentPosition, nextPosition, otherPlayerPositions, otherPlayerStart):
         if nextPosition[0] < 0 or nextPosition[0] > self.board.m-1 or nextPosition[1] < 0 or nextPosition[1] > self.board.n-1:
             print("Pozicije zida su van okvira table")
@@ -208,14 +203,15 @@ class Game:
                         if not (pos in otherPlayerPositions or nextPosition in otherPlayerStart):
                             return False
                     elif movedY == 0:
-                        pos = [currentPosition[0], currentPosition[1]-(currentPosition[1]-nextPosition[1])*2]
+                        pos = [currentPosition[0], currentPosition[1] -
+                               (currentPosition[1]-nextPosition[1])*2]
                         if not (pos in otherPlayerPositions or nextPosition in otherPlayerStart):
                             return False
                     # blokiran je pesakom pa sme jedno polje levo/desno/gore/dole
             elif movedX == 2 or movedY == 2:  # dva polja levo/desno/gore/dole
                 if self.isBlockedByWall("p" if movedX == 0 else "z", currentPosition, nextPosition):
                     return False
-            else: #nevalidna pozicija
+            else:  # nevalidna pozicija
                 return False
             if nextPosition in otherPlayerPositions:
                 if nextPosition in otherPlayerStart:
@@ -226,8 +222,6 @@ class Game:
         else:
             return False
 
-
-
     def isBlockedByWall(self, type, position, nextPosition):
         if type == "p" and len(list(filter(lambda w: w.type == type and (w.position[1] == position[1] or w.position[1]+1 == position[1]) and (w.position[0] in range(*sorted([position[0], nextPosition[0]]))), self.board.walls))) > 0:
             return True
@@ -235,18 +229,16 @@ class Game:
             return True
         return False
 
-
-
     def changeBoardState(self, playerNumber, playerPosition, wallPosition, wallType, playerType):
         if playerType == "x":
-            self.changePlayerStats(self.board.player1, wallType, playerPosition, playerNumber)
+            self.changePlayerStats(
+                self.board.player1, wallType, playerPosition, playerNumber)
         else:
-            self.changePlayerStats(self.board.player2, wallType, playerPosition, playerNumber)
+            self.changePlayerStats(
+                self.board.player2, wallType, playerPosition, playerNumber)
 
-        if(len(wallPosition) == 2):    
+        if(len(wallPosition) == 2):
             self.board.walls.append(Wall(wallPosition, wallType))
-
-
 
     def changePlayerStats(self, player, wallType, playerPosition, playerNumber):
         player.positions = (
