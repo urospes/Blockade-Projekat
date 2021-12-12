@@ -74,7 +74,7 @@ class Game:
         otherPlayerPositions = []
         while len(otherPlayerPositions) < 4:
             print("Unesite pocetne pozicije protivnickih igraca x1 y1 x2 y2 ")
-            position = "5 6 7 8"  # input()
+            position = "1 2 7 8"  # input()
             otherPlayerPositions = list(map(int, re.findall(r"(\d+)", position)))
         otherPlayerPositions = (
             [otherPlayerPositions[0], otherPlayerPositions[1]],
@@ -86,13 +86,8 @@ class Game:
 
     def isEnd(self):
         return bool(
-            set(self.board.player1.positions).intersection(
-                set(self.board.startPositionsO)
-            )
-            or set(self.board.player2.positions).intersection(
-                set(self.board.startPositionsX)
-            )
-        )
+            len(list(x for x in self.board.player1.positions if x in self.board.startPositionsO))
+            or len(list(x for x in self.board.player2.positions if x in self.board.startPositionsX)))
 
     def setBoard(self, board):
         self.board = board
@@ -422,3 +417,9 @@ class Game:
             player.greenWallNumber -= 1
         else:
             player.blueWallNumber -= 1
+
+
+game = Game()
+game.getStartState()
+kraj = game.isEnd()
+print("")
