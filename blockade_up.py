@@ -16,7 +16,6 @@ clock = pygame.time.Clock()
 
 
 
-
 #funkcija za iscrtavanje header-a igre
 def DrawHeader(p1_walls: tuple[int, int], p2_walls: tuple[int, int], redFirst: bool):
 
@@ -162,9 +161,13 @@ red_to_move = True
 #treci element pokazuje da li je izabran zid). Kada su sva tri elementa True, potez je odigran i prelazimo na drugog igraca
 move_state = [False, False, False]
 move = [None, None, None]
+MOVE_FINISHED = pygame.USEREVENT + 1
+
 
 #funckija za obradu klikova
 def HandleClickEvent(click_pos : tuple[int, int], board_info):
+
+    #izbor igraca koji se pomera
     if not move_state[0]:
         player_boxes = board_info["player_boxes"]
         #znaci da jos uvek nije izabran igrac kojeg hocemo da pomerimo
@@ -183,6 +186,7 @@ def HandleClickEvent(click_pos : tuple[int, int], board_info):
                 move[0] = 1
                 move_state[0] = True
     
+    #izbor odredisne pozicije igraca
     elif move_state[0] and not move_state[1]:
         #sada biramo odredisno polje
         click_pos = list(click_pos)
@@ -208,6 +212,7 @@ def HandleClickEvent(click_pos : tuple[int, int], board_info):
             move_state[1] = True
             print(move)
     
+    #izbor pozicije zida
     elif move_state[0] and move_state[1] and not move_state[2]:
         #sada biramo gde hocemo da postavimo zid
         click_pos = list(click_pos)
@@ -233,6 +238,8 @@ def HandleClickEvent(click_pos : tuple[int, int], board_info):
             move_state[2] = True
             move[2] = (wallPos[0], wallPos[1], 'z')
             print(move)
+            move_state[2] = True
+            pygame.event.post(pygame.event.Event(MOVE_FINISHED))
             return
         
         #ako nije nadjen vertikalni zid, trazimo horizontalni
@@ -252,11 +259,13 @@ def HandleClickEvent(click_pos : tuple[int, int], board_info):
             move_state[2] = True
             move[2] = (wallPos[0], wallPos[1], 'p')
             print(move)
+            move_state[2] = True
+            pygame.event.post(pygame.event.Event(MOVE_FINISHED))
             return
 
-
-
-
+    #ukoliko je sve izabrano, zavrsavamo potez
+    if move_state[0] and move_state[1] and move_state[2]:
+        pygame.event.post(pygame.event.Event(MOVE_FINISHED))
 
 
 
@@ -270,6 +279,26 @@ while True:
         
         if event.type == pygame.MOUSEBUTTONDOWN:
             HandleClickEvent(event.pos, board_info)
+        
+        if event.type == MOVE_FINISHED:
+            #igranje poteza
+            wall_move_pos = (move[2][0], move[2][1]) if move[2] else ()
+            wall_type = move[2][2] if move[2] else ''
+            player_type = 'x' if red_to_move else 'o'
+            game.nextMove(move[0], wall_move_pos, wall_type, player_type, move[1])
+
+            #promena stanja
+            if (game.board.player1.greenWallNumber == game.board.player2.blueWallNumber == 0) and (game.board.player2.greenWallNumber == game.board.player2.blueWallNumber == 0):
+                #ako nemamo vise zidova
+                new_state = [False, False, True]
+            else:
+                new_state = [False, False, False]
+            
+            red_to_move = not red_to_move
+            move = [None, None, None]
+            move_state = new_state
+            #ovde treba da ubacimo proveru da li je stiglo do kraja
+            print(red_to_move)
             
 
     #draw

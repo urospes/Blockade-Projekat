@@ -117,9 +117,7 @@ class Game:
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
             return False
 
-        if (self.isPlayerOneNext and self.board.player1.type != playerType) or (
-            not self.isPlayerOneNext and self.board.player2.type != playerType
-        ):
+        if (self.isPlayerOneNext and self.board.player1.type != playerType) or (not self.isPlayerOneNext and self.board.player2.type != playerType):
             print("Drugi igrac je na redu")
             return False
 
