@@ -165,67 +165,91 @@ def DrawGameBoard(size: tuple[int, int], player_1: tuple[tuple[int, int]], playe
 
 
 
-#game loop
-game_end = False
-red_to_move = True
-#move_state je lista koja pamti stanje poteza (prvi element pamti da li je izabran igrac kog zelimo da pomerimo, drugi element pamti da li je izabrano odredisno polje,
-#treci element pokazuje da li je izabran zid). Kada su sva tri elementa True, potez je odigran i prelazimo na drugog igraca
-move_state = [False, False, False]
-move = [None, None, None]
-MOVE_FINISHED = pygame.USEREVENT + 1
-
-
-#funckija za obradu klikova
-def HandleClickEvent(click_pos : tuple[int, int], board_info):
-
-    #izbor igraca koji se pomera
-    if not move_state[0]:
-        player_boxes = board_info["player_boxes"]
-        #znaci da jos uvek nije izabran igrac kojeg hocemo da pomerimo
-        if red_to_move:
-            if player_boxes[0][0].collidepoint(click_pos):
-                move[0] = 0
-                move_state[0] = True
-            elif player_boxes[0][1].collidepoint(click_pos):
-                move[0] = 1
-                move_state[0] = True
-        else:
-            if player_boxes[1][0].collidepoint(click_pos):
-                move[0] = 0
-                move_state[0] = True
-            elif player_boxes[1][1].collidepoint(click_pos):
-                move[0] = 1
-                move_state[0] = True
+def DrawPossibleMoves(valid_moves, chosen_move, board):
+    for move in valid_moves:
+        square = pygame.rect.Rect(board[0] + move[1] * (const.SQUARE + const.WALL_W), board[1] + move[0] * (const.SQUARE + const.WALL_W), 
+            const.SQUARE, const.SQUARE)
+        pygame.draw.rect(screen, const.DEST_COLOR, square)
     
-    #izbor odredisne pozicije igraca
-    elif move_state[0] and not move_state[1]:
-        #sada biramo odredisno polje
-        click_pos = list(click_pos)
-        board_rect = board_info["board_rect"]
+    if chosen_move[0] != -1 and chosen_move[1] != -1:
+        dest_square = pygame.rect.Rect(board[0] + chosen_move[1] * (const.SQUARE + const.WALL_W), board[1] + chosen_move[0] * (const.SQUARE + const.WALL_W), 
+                const.SQUARE, const.SQUARE)
+        pygame.draw.rect(screen, const.DEST_COLOR, dest_square)
+    
 
+
+
+class MoveState:
+    def __init__(self, game: bl.Game, board_info):
+        self.game = game
+        self.red_to_move = True if game.playerToMove == 'x' else False
+        self.figure_num = -1
+        self.valid_moves = []
+        self.new_figure_pos = [-1, -1]
+        self.wall_pos = [-1, -1, '']
+        self.board_info = board_info
+
+
+
+    def switch_players(self):
+        self.red_to_move = not self.red_to_move
+        self.figure_num = -1
+        self.new_figure_pos[0] = self.new_figure_pos[1] = -1
+        if self.game.board.player1.greenWallNumber == 0 and self.game.board.player1.blueWallNumber == 0 and self.game.board.player2.greenWallNumber == 0 and self.game.board.player2.blueWallNumber == 0:
+            self.wall_pos = ()
+        else:
+            self.wall_pos = [-1, -1, '']
+    
+
+    def choose_figure(self, click: tuple[int, int]):
+        player_boxes = self.board_info["player_boxes"]
+        if self.red_to_move:
+            if player_boxes[0][0].collidepoint(click):
+                self.figure_num = 0
+            elif player_boxes[0][1].collidepoint(click):
+                self.figure_num = 1
+        else:
+            if player_boxes[1][0].collidepoint(click):
+                self.figure_num = 0
+            elif player_boxes[1][1].collidepoint(click):
+                self.figure_num = 1
+
+        if self.figure_num != -1:
+            self.new_figure_pos = [-1, -1]
+            self.wall_pos = [-1, -1, ''] if len(self.wall_pos) > 0 else ()
+            self.valid_moves = self.game.generate_player_moves(self.figure_num)
+    
+
+    def choose_figure_position(self, click_pos: tuple[int, int]):
+        if self.new_figure_pos[0] != -1 and self.new_figure_pos[1] != -1:
+            return
+
+        click_pos = list(click_pos)
+        board_rect = self.board_info["board_rect"]
         click_pos[0] -= board_rect[0]
         click_pos[1] -= board_rect[1]
-        newPos = [-1, -1]
-
-        #sada imamo koordinata klika u odnosu na pocetak table i mozemo da nadjemo indekse
+        
         for i in range(0, game.board.n):
             if ((const.WALL_W + const.SQUARE) * i < click_pos[0]) and ((const.WALL_W + const.SQUARE) * i + const.SQUARE > click_pos[0]):
-                newPos[1] = i
+                self.new_figure_pos[1] = i
                 break
         
         for i in range(0, game.board.m):
             if ((const.WALL_W + const.SQUARE) * i < click_pos[1]) and ((const.WALL_W + const.SQUARE) * i + const.SQUARE > click_pos[1]):
-                newPos[0] = i
+                self.new_figure_pos[0] = i
                 break
         
-        if newPos[0] != -1 and newPos[1] != -1:
-            move[1] = (newPos[0], newPos[1])
-            move_state[1] = True
-            print(move)
+        if self.new_figure_pos[0] != -1 and self.new_figure_pos[1] != -1:
+            if (self.new_figure_pos[0], self.new_figure_pos[1]) not in self.valid_moves:
+                self.new_figure_pos[0] = self.new_figure_pos[1] = -1
+            else:
+                self.valid_moves = []
+        else:
+            self.new_figure_pos[0] = -1
+            self.new_figure_pos[1] = -1
     
-    #izbor pozicije zida
-    elif move_state[0] and move_state[1] and not move_state[2]:
-        #sada biramo gde hocemo da postavimo zid
+
+    def choose_wall_position(self, click_pos: tuple[int, int]):
         click_pos = list(click_pos)
         board_rect = board_info["board_rect"]
 
@@ -246,14 +270,11 @@ def HandleClickEvent(click_pos : tuple[int, int], board_info):
                 break
         
         if wallPos[0] != -1 and wallPos[1] != -1:
-            move_state[2] = True
-            move[2] = (wallPos[0], wallPos[1], 'z')
-            print(move)
-            move_state[2] = True
-            pygame.event.post(pygame.event.Event(MOVE_FINISHED))
+            self.wall_pos = (wallPos[0], wallPos[1], 'z')
             return
         
-        #ako nije nadjen vertikalni zid, trazimo horizontalni
+
+        #ako nije postavljen vertikalni zid, trazimo horizontalni zid
         wallPos = [-1, -1]
         for i in range(0, game.board.m):
             if (click_pos[1] > const.SQUARE + i * (const.SQUARE + const.WALL_W)) and (click_pos[1] < (i + 1) * (const.SQUARE + const.WALL_W)):
@@ -267,16 +288,25 @@ def HandleClickEvent(click_pos : tuple[int, int], board_info):
                 break
         
         if wallPos[0] != -1 and wallPos[1] != -1:
-            move_state[2] = True
-            move[2] = (wallPos[0], wallPos[1], 'p')
-            print(move)
-            move_state[2] = True
-            pygame.event.post(pygame.event.Event(MOVE_FINISHED))
+            self.wall_pos = (wallPos[0], wallPos[1], 'p')
             return
 
+
+
+#funckija za obradu klikova
+def HandleClickEvent(click_pos : tuple[int, int], move_state: MoveState):
+
+    if move_state.figure_num == -1:
+        move_state.choose_figure(click_pos)
+    elif move_state.new_figure_pos[0] == -1 and move_state.new_figure_pos[1] == -1:
+        move_state.choose_figure_position(click_pos)
+    elif len(move_state.wall_pos) > 0 and move_state.wall_pos[0] == -1 and move_state.wall_pos[0] == -1:
+        move_state.choose_wall_position(click_pos)
+
     #ukoliko je sve izabrano, zavrsavamo potez
-    if move_state[0] and move_state[1] and move_state[2]:
+    if move_state.figure_num != -1 and move_state.new_figure_pos[0] != -1 and move_state.new_figure_pos[1] != -1 and (len(move_state.wall_pos) == 0 or move_state.wall_pos[2] != ''):
         pygame.event.post(pygame.event.Event(MOVE_FINISHED))
+
 
 
 #funkcija za prikaz pobednika na kraju igre
@@ -288,10 +318,15 @@ def PrintWinner(winner_red: bool):
     winner_text_surface = winner_font.render(winner_text, True, const.WIN_TEXT_COLOR)
     winner_text_rect = winner_text_surface.get_rect(center = (const.WIN_WIDTH // 2, const.WIN_HEIGHT // 2))
     screen.blit(winner_text_surface, winner_text_rect)
+            
 
+#game loop
+game_end = False
+#move_state je lista koja pamti stanje poteza (prvi element pamti da li je izabran igrac kog zelimo da pomerimo, drugi element pamti da li je izabrano odredisno polje,
+#treci element pokazuje da li je izabran zid). Kada su sva tri elementa True, potez je odigran i prelazimo na drugog igraca
+MOVE_FINISHED = pygame.USEREVENT + 1
 
-
-
+move_state = MoveState(game, None)
 while True:
 
     for event in pygame.event.get():
@@ -301,42 +336,32 @@ while True:
             exit()
         
         if event.type == pygame.MOUSEBUTTONDOWN:
-            HandleClickEvent(event.pos, board_info)
+            HandleClickEvent(event.pos, move_state)
         
         if event.type == MOVE_FINISHED:
             #igranje poteza
-            wall_move_pos = (move[2][0], move[2][1]) if move[2] else ()
-            wall_type = move[2][2] if move[2] else ''
-            player_type = 'x' if red_to_move else 'o'
-            move_done = game.nextMove(move[0], wall_move_pos, wall_type, player_type, move[1])
+            wall_move_pos = (move_state.wall_pos[0], move_state.wall_pos[1]) if len(move_state.wall_pos) != 0 else ()
+            wall_type = move_state.wall_pos[2] if len(move_state.wall_pos) != 0 else ''
+            player_type = 'x' if move_state.red_to_move else 'o'
+            move_done = game.nextMove(move_state.figure_num, wall_move_pos, wall_type, player_type, move_state.new_figure_pos)
             if game.isEnd():
                 game_end = True
             else:
+                move_state.switch_players()
                 if not move_done:
                     #ukoliko je potez nevalidan, moramo da resetujemo potez
-                    move = [None, None, None]
-                    old_state = False if wall_type != '' else True
-                    move_state = [False, False, old_state]
-
-                else:
-                    #promena stanja
-                    if (game.board.player1.greenWallNumber == game.board.player2.blueWallNumber == 0) and (game.board.player2.greenWallNumber == game.board.player2.blueWallNumber == 0):
-                        #ako nemamo vise zidova
-                        new_state = [False, False, True]
-                    else:
-                        new_state = [False, False, False]
-                    
-                    red_to_move = not red_to_move
-                    move = [None, None, None]
-                    move_state = new_state
+                    move_state.red_to_move = not move_state.red_to_move
             
 
     if not game_end:
         #draw
-        DrawHeader((game.board.player1.greenWallNumber, game.board.player1.blueWallNumber), (game.board.player2.greenWallNumber, game.board.player2.blueWallNumber), red_to_move)
+        screen.fill("BLACK")
+        DrawHeader((game.board.player1.greenWallNumber, game.board.player1.blueWallNumber), (game.board.player2.greenWallNumber, game.board.player2.blueWallNumber), move_state.red_to_move)
         board_info = DrawGameBoard((game.board.m, game.board.n), game.board.player1.positions, game.board.player2.positions, game.board.walls, (game.board.startPositionsX, game.board.startPositionsO))
+        move_state.board_info = board_info
+        DrawPossibleMoves(move_state.valid_moves, move_state.new_figure_pos, move_state.board_info["board_rect"])
     else:
-        PrintWinner(red_to_move)
+        PrintWinner(move_state.red_to_move)
 
 
     #update

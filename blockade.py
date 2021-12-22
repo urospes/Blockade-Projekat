@@ -130,8 +130,8 @@ class Game:
 
         player = self.board.player1 if playerType == "x" else self.board.player2
         otherPlayer = self.board.player2 if playerType == "x" else self.board.player1
-        if playerPosition == player.positions[abs(playerNumber-1)]:
-            return False
+        #if playerPosition == player.positions[abs(playerNumber-1)]:
+            #return False
         if player.greenWallNumber > 0 or player.blueWallNumber > 0:
             if len(wallPosition) == 0:
                 print("Niste uneli pozicije zida")
@@ -142,7 +142,7 @@ class Game:
         # zid se postavlja na validnu poziciju
         # provera da li se pesak pomera na validnu poziciju
         otherPlayerStart = self.board.startPositionsO if playerType == "x" else self.board.startPositionsX
-        if not self.isValidPlayerMove(player.positions[playerNumber], playerPosition, otherPlayer.positions, otherPlayerStart):
+        if not self.isValidPlayerMove(player.positions[playerNumber], playerPosition, otherPlayer.positions, otherPlayerStart,player.positions[abs(playerNumber-1)]):
             return False
         return True
 
@@ -176,7 +176,9 @@ class Game:
                     return False
             return True
 
-    def isValidPlayerMove(self, currentPosition, nextPosition, otherPlayerPositions, otherPlayerStart):
+    def isValidPlayerMove(self, currentPosition, nextPosition, otherPlayerPositions, otherPlayerStart,currentPosition2):
+        if nextPosition==currentPosition2:
+            return False
         if nextPosition[0] < 0 or nextPosition[0] > self.board.m-1 or nextPosition[1] < 0 or nextPosition[1] > self.board.n-1:
             print("Pozicije zida su van okvira table")
             return False
@@ -249,3 +251,25 @@ class Game:
             player.greenWallNumber -= 1
         elif wallType == "p":
             player.blueWallNumber -= 1
+
+
+
+    def generate_player_moves(self, figure_num):
+        figure_pos = self.board.player1.positions[figure_num] if self.playerToMove == 'x' else self.board.player2.positions[figure_num]
+
+        all_moves = [[figure_pos[0] + 2, figure_pos[1]], [figure_pos[0] - 2, figure_pos[1]], [figure_pos[0], figure_pos[1] + 2],
+            [figure_pos[0], figure_pos[1] - 2], [figure_pos[0] + 1, figure_pos[1] + 1], [figure_pos[0] - 1, figure_pos[1] - 1],
+            [figure_pos[0] + 1, figure_pos[1] - 1], [figure_pos[0] - 1, figure_pos[1] + 1], [figure_pos[0] + 1, figure_pos[1]],
+            [figure_pos[0] - 1, figure_pos[1]], [figure_pos[0], figure_pos[1] + 1], [figure_pos[0], figure_pos[1]- 1]]
+        
+        ret = list()
+        other_players = self.board.player1.positions if self.playerToMove == 'o' else self.board.player2.positions
+        other_start = self.board.startPositionsX if self.playerToMove == 'o' else self.board.startPositionsO
+        player = self.board.player1 if self.playerToMove == 'x' else self.board.player2
+        player_figure_2 = player.positions[0] if figure_num == 1 else player.positions[1]
+
+        for move in all_moves:
+            if self.isValidPlayerMove(figure_pos, move, other_players, other_start, player_figure_2):
+                ret.append(tuple(move))
+        
+        return ret
