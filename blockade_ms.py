@@ -323,13 +323,15 @@ class Game:
             else:
                 break
 
-        ret.append(self.generate_figure_diagonal_lines(state, stepXY, stepD))
+        ret.extend(self.generate_figure_diagonal_lines(state, stepXY, stepD))
         return ret
 
     def generate_figure_diagonal_lines(self, state, stepXY, stepD):
+        #print("******STANJE ", state, " ****")
         ret = list()
         pos = state
         next_pos = (pos[0] - 1, pos[1] - 1)
+        #print("GORE LEVO")
         while next_pos[0] >= 0 and next_pos[1] >= 0:
             if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
                 if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
@@ -337,12 +339,14 @@ class Game:
             elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
                 if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
                     break
+            #print(next_pos)
             ret.append(next_pos)
             pos = next_pos
             next_pos = (next_pos[0]-1, pos[1] - 1)
 
         pos = state
         next_pos = (pos[0] - 1, pos[1] + 1)
+        #print("GORE DESNO")
         while next_pos[0] >= 0 and next_pos[1] < self.board.n:
             if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
                 if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
@@ -350,12 +354,14 @@ class Game:
             elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
                 if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
                     break
+            #print(next_pos)
             ret.append(next_pos)
             pos = next_pos
             next_pos = (next_pos[0]-1, pos[1] + 1)
 
         pos = state
         next_pos = (pos[0] + 1, pos[1] - 1)
+        #print("DOLE LEVO")
         while next_pos[0] < self.board.m and next_pos[1] >= 0:
             if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
                 if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
@@ -363,12 +369,14 @@ class Game:
             elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
                 if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
                     break
+           # print(next_pos)
             ret.append(next_pos)
             pos = next_pos
             next_pos = (next_pos[0]+1, pos[1] - 1)
 
         pos = state
         next_pos = (pos[0] + 1, pos[1] + 1)
+        #print("DOLE DESNO")
         while next_pos[0] < self.board.m and next_pos[1] < self.board.n:
             if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
                 if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
@@ -376,6 +384,7 @@ class Game:
             elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
                 if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
                     break
+            #print(next_pos)
             ret.append(next_pos)
             pos = next_pos
             next_pos = (next_pos[0]+1, pos[1] + 1)
