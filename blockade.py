@@ -54,22 +54,27 @@ class Game:
         print('Da li zelite da igrate prvi? Unesite "da" ili "ne" ')
         first = True if str(input()).lower() == "da" else False
 
-        labels = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R"]
+        labels = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C",
+                  "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R"]
         playerPositions = []
         while len(playerPositions) < 4:
             print("Unesite pocetne pozicije crvenih igraca x1 y1 x2 y2 ")
             position = input()
             playerPositions = re.findall(r"(\d+|\w+)", position, re.ASCII)
-            playerPositions = list(map(lambda x: labels.index(x.upper()), playerPositions))
-        playerPositions = ([playerPositions[0], playerPositions[1]], [playerPositions[2], playerPositions[3]])
+            playerPositions = list(
+                map(lambda x: labels.index(x.upper()), playerPositions))
+        playerPositions = ([playerPositions[0], playerPositions[1]], [
+                           playerPositions[2], playerPositions[3]])
 
         otherPlayerPositions = []
         while len(otherPlayerPositions) < 4:
             print("Unesite pocetne pozicije zutih igraca x1 y1 x2 y2 ")
             position = input()
             otherPlayerPositions = re.findall(r"(\d+|\w+)", position, re.ASCII)
-            otherPlayerPositions = list(map(lambda x: labels.index(x.upper()), otherPlayerPositions))
-        otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [otherPlayerPositions[2], otherPlayerPositions[3]])
+            otherPlayerPositions = list(
+                map(lambda x: labels.index(x.upper()), otherPlayerPositions))
+        otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [
+                                otherPlayerPositions[2], otherPlayerPositions[3]])
 
         self.setBoard(Board(m, n, playerPositions, otherPlayerPositions, k))
         self.isPlayerOneNext = True if (first) else False
@@ -130,8 +135,8 @@ class Game:
 
         player = self.board.player1 if playerType == "x" else self.board.player2
         otherPlayer = self.board.player2 if playerType == "x" else self.board.player1
-        #if playerPosition == player.positions[abs(playerNumber-1)]:
-            #return False
+        # if playerPosition == player.positions[abs(playerNumber-1)]:
+        # return False
         if player.greenWallNumber > 0 or player.blueWallNumber > 0:
             if len(wallPosition) == 0:
                 print("Niste uneli pozicije zida")
@@ -142,7 +147,7 @@ class Game:
         # zid se postavlja na validnu poziciju
         # provera da li se pesak pomera na validnu poziciju
         otherPlayerStart = self.board.startPositionsO if playerType == "x" else self.board.startPositionsX
-        if not self.isValidPlayerMove(player.positions[playerNumber], playerPosition, otherPlayer.positions, otherPlayerStart,player.positions[abs(playerNumber-1)]):
+        if not self.isValidPlayerMove(player.positions[playerNumber], playerPosition, otherPlayer.positions, otherPlayerStart, player.positions[abs(playerNumber-1)]):
             return False
         return True
 
@@ -176,8 +181,8 @@ class Game:
                     return False
             return True
 
-    def isValidPlayerMove(self, currentPosition, nextPosition, otherPlayerPositions, otherPlayerStart,currentPosition2):
-        if nextPosition==currentPosition2:
+    def isValidPlayerMove(self, currentPosition, nextPosition, otherPlayerPositions, otherPlayerStart, currentPosition2):
+        if nextPosition == currentPosition2:
             return False
         if nextPosition[0] < 0 or nextPosition[0] > self.board.m-1 or nextPosition[1] < 0 or nextPosition[1] > self.board.n-1:
             print("Pozicije zida su van okvira table")
@@ -252,16 +257,17 @@ class Game:
         elif wallType == "p":
             player.blueWallNumber -= 1
 
-
-
     def generate_player_moves(self, figure_num):
-        figure_pos = self.board.player1.positions[figure_num] if self.playerToMove == 'x' else self.board.player2.positions[figure_num]
+        figure_pos = self.board.player1.positions[
+            figure_num] if self.playerToMove == 'x' else self.board.player2.positions[figure_num]
 
         all_moves = [[figure_pos[0] + 2, figure_pos[1]], [figure_pos[0] - 2, figure_pos[1]], [figure_pos[0], figure_pos[1] + 2],
-            [figure_pos[0], figure_pos[1] - 2], [figure_pos[0] + 1, figure_pos[1] + 1], [figure_pos[0] - 1, figure_pos[1] - 1],
-            [figure_pos[0] + 1, figure_pos[1] - 1], [figure_pos[0] - 1, figure_pos[1] + 1], [figure_pos[0] + 1, figure_pos[1]],
-            [figure_pos[0] - 1, figure_pos[1]], [figure_pos[0], figure_pos[1] + 1], [figure_pos[0], figure_pos[1]- 1]]
-        
+                     [figure_pos[0], figure_pos[1] - 2], [figure_pos[0] + 1,
+                                                          figure_pos[1] + 1], [figure_pos[0] - 1, figure_pos[1] - 1],
+                     [figure_pos[0] + 1, figure_pos[1] - 1], [figure_pos[0] - 1,
+                                                              figure_pos[1] + 1], [figure_pos[0] + 1, figure_pos[1]],
+                     [figure_pos[0] - 1, figure_pos[1]], [figure_pos[0], figure_pos[1] + 1], [figure_pos[0], figure_pos[1] - 1]]
+
         ret = list()
         other_players = self.board.player1.positions if self.playerToMove == 'o' else self.board.player2.positions
         other_start = self.board.startPositionsX if self.playerToMove == 'o' else self.board.startPositionsO
@@ -271,24 +277,22 @@ class Game:
         for move in all_moves:
             if self.isValidPlayerMove(figure_pos, move, other_players, other_start, player_figure_2):
                 ret.append(tuple(move))
-        
-        return ret
-    
 
+        return ret
 
     def generate_figure_lines(self, state, stepXY, stepD):
         ret = list()
 
         pos = state
         next_pos = (pos[0] + 2, pos[1])
-        while next_pos[0]  < self.board.m:
+        while next_pos[0] < self.board.m:
             if not self.isBlockedByWall('p', pos, next_pos):
                 ret.append(next_pos)
                 pos = next_pos
                 next_pos = (next_pos[0] + 2, pos[1])
             else:
                 break
-        
+
         pos = state
         next_pos = (pos[0] - 2, pos[1])
         while next_pos[0] >= 0:
@@ -301,14 +305,14 @@ class Game:
 
         pos = state
         next_pos = (pos[0], pos[1] + 2)
-        while next_pos[1]  < self.board.n:
+        while next_pos[1] < self.board.n:
             if not self.isBlockedByWall('z', pos, next_pos):
                 ret.append(next_pos)
                 pos = next_pos
                 next_pos = (next_pos[0], pos[1] + 2)
             else:
                 break
-        
+
         pos = state
         next_pos = (pos[0], pos[1] - 2)
         while next_pos[1] >= 0:
@@ -318,10 +322,65 @@ class Game:
                 next_pos = (next_pos[0], pos[1] - 2)
             else:
                 break
-        
+
+        ret.append(self.generate_figure_diagonal_lines(state, stepXY, stepD))
         return ret
 
+    def generate_figure_diagonal_lines(self, state, stepXY, stepD):
+        ret = list()
+        pos = state
+        next_pos = (pos[0] - 1, pos[1] - 1)
+        while next_pos[0] >= 0 and next_pos[1] >= 0:
+            if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
+                if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
+                    break
+            elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
+                    break
+            ret.append(next_pos)
+            pos = next_pos
+            next_pos = (next_pos[0]-1, pos[1] - 1)
 
+        pos = state
+        next_pos = (pos[0] - 1, pos[1] + 1)
+        while next_pos[0] >= 0 and next_pos[1] < self.board.n:
+            if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
+                if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
+                    break
+            elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
+                    break
+            ret.append(next_pos)
+            pos = next_pos
+            next_pos = (next_pos[0]-1, pos[1] + 1)
+
+        pos = state
+        next_pos = (pos[0] + 1, pos[1] - 1)
+        while next_pos[0] < self.board.m and next_pos[1] >= 0:
+            if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
+                if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
+                    break
+            elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
+                    break
+            ret.append(next_pos)
+            pos = next_pos
+            next_pos = (next_pos[0]+1, pos[1] - 1)
+
+        pos = state
+        next_pos = (pos[0] + 1, pos[1] + 1)
+        while next_pos[0] < self.board.m and next_pos[1] < self.board.n:
+            if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
+                if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
+                    break
+            elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
+                    break
+            ret.append(next_pos)
+            pos = next_pos
+            next_pos = (next_pos[0]+1, pos[1] + 1)
+
+        return ret
 
     def h_dist(self, state, dest):
         if state[0] - dest[0] == state[1] - dest[1]:
@@ -329,20 +388,19 @@ class Game:
         else:
             return abs(state[0] - dest[0]) + abs(state[1] - dest[1])
 
+    # proveravamo da li zid blokira put do oba odredisna polja
 
-    #proveravamo da li zid blokira put do oba odredisna polja
     def check_for_paths() -> bool:
         return
 
-    
-    def check_red_paths(self, stepXY : int, stepD : int) -> bool:
+    def check_red_paths(self, stepXY: int, stepD: int) -> bool:
 
         start_f1 = tuple(self.board.player1.positions[0])
         start_f2 = tuple(self.board.player2.positions[1])
         dest_1 = tuple(self.board.startPositionsO[0])
         dest_2 = tuple(self.board.startPositionsO[1])
 
-        #moramo da nadjemo put do oba ciljna cvora
+        # moramo da nadjemo put do oba ciljna cvora
         found_1 = found_2 = False
         path_1 = list()
         path_2 = set()
@@ -370,11 +428,10 @@ class Game:
                     g[new_state] = self.h_dist(new_state, dest_1)
                     nodes_to_visit.add(new_state)
                     prev_nodes[new_state] = state
-            
 
             nodes_to_visit.remove(state)
             visited_nodes.add(state)
-        
+
         if found_1:
             state = dest_1
             while prev_nodes[state] is not None:
@@ -383,11 +440,5 @@ class Game:
             path_1.append(start_f1)
             path_1.reverse()
             print(path_1)
-        
+
         return path_1
-                
-            
-
-
-
-    
