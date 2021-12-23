@@ -144,6 +144,7 @@ class Game:
         return next_states
 
     #kreira novo stanje i menja mu poziciju i zid
+    #mozda ovo moze da se optimizuje? umesto deep copy pa menjanje da se odmah kreira novi Game sa parametrima
     def createNewState(self, playerNumber, playerPosition, wallPosition, wallType):
         newGame=copy.deepcopy(self)
         newGame.changeBoardState( playerNumber, playerPosition, wallPosition, wallType)
@@ -302,8 +303,8 @@ class Game:
 
     def generate_wall_moves(self, game, green, blue):
         walls=list()
-        for x in range(1, game.board.m ):
-            for y in range(1, game.board.n):
+        for x in range(0, game.board.m-1 ):
+            for y in range(0, game.board.n-1):
                 if green:
                     walls.append(Wall((x,y),"z"))
                 if blue:
@@ -313,7 +314,7 @@ class Game:
         return walls
 
 game=Game()
-game.setBoard(Board(22,28,([3,3], [1,1]), ([1,3], [3,1]), 4))
+game.setBoard(Board(5,5,([3,3], [1,1]), ([1,3], [3,1]), 4))
 stanja=game.generateNextGameStates(game )
 
 print('')
