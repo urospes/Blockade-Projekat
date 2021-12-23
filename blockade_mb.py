@@ -303,8 +303,8 @@ class Game:
 
     def generate_wall_moves(self, game, green, blue):
         walls=list()
-        for x in range(0, game.board.m-1 ):
-            for y in range(0, game.board.n-1):
+        for x in range(0, game.board.m ):
+            for y in range(0, game.board.n):
                 if green:
                     walls.append(Wall((x,y),"z"))
                 if blue:
@@ -314,7 +314,7 @@ class Game:
         return walls
 
 game=Game()
-game.setBoard(Board(5,5,([3,3], [1,1]), ([1,3], [3,1]), 4))
+game.setBoard(Board(4,4,([0,0], [0,1]), ([1,1], [1,0]), 4))
 stanja=game.generateNextGameStates(game )
 
 print('')
