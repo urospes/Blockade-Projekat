@@ -338,6 +338,10 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             HandleClickEvent(event.pos, move_state)
         
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_k:
+                move_state.game.check_red_paths(0, 0)
+        
         if event.type == MOVE_FINISHED:
             #igranje poteza
             wall_move_pos = (move_state.wall_pos[0], move_state.wall_pos[1]) if len(move_state.wall_pos) != 0 else ()
