@@ -273,3 +273,121 @@ class Game:
                 ret.append(tuple(move))
         
         return ret
+    
+
+
+    def generate_figure_lines(self, state, stepXY, stepD):
+        ret = list()
+
+        pos = state
+        next_pos = (pos[0] + 2, pos[1])
+        while next_pos[0]  < self.board.m:
+            if not self.isBlockedByWall('p', pos, next_pos):
+                ret.append(next_pos)
+                pos = next_pos
+                next_pos = (next_pos[0] + 2, pos[1])
+            else:
+                break
+        
+        pos = state
+        next_pos = (pos[0] - 2, pos[1])
+        while next_pos[0] >= 0:
+            if not self.isBlockedByWall('p', pos, next_pos):
+                ret.append(next_pos)
+                pos = next_pos
+                next_pos = (next_pos[0] - 2, pos[1])
+            else:
+                break
+
+        pos = state
+        next_pos = (pos[0], pos[1] + 2)
+        while next_pos[1]  < self.board.n:
+            if not self.isBlockedByWall('z', pos, next_pos):
+                ret.append(next_pos)
+                pos = next_pos
+                next_pos = (next_pos[0], pos[1] + 2)
+            else:
+                break
+        
+        pos = state
+        next_pos = (pos[0], pos[1] - 2)
+        while next_pos[1] >= 0:
+            if not self.isBlockedByWall('z', pos, next_pos):
+                ret.append(next_pos)
+                pos = next_pos
+                next_pos = (next_pos[0], pos[1] - 2)
+            else:
+                break
+        
+        return ret
+
+
+
+    def h_dist(self, state, dest):
+        if state[0] - dest[0] == state[1] - dest[1]:
+            return state[0] - dest[0]
+        else:
+            return abs(state[0] - dest[0]) + abs(state[1] - dest[1])
+
+
+    #proveravamo da li zid blokira put do oba odredisna polja
+    def check_for_paths() -> bool:
+        return
+
+    
+    def check_red_paths(self, stepXY : int, stepD : int) -> bool:
+
+        start_f1 = tuple(self.board.player1.positions[0])
+        start_f2 = tuple(self.board.player2.positions[1])
+        dest_1 = tuple(self.board.startPositionsO[0])
+        dest_2 = tuple(self.board.startPositionsO[1])
+
+        #moramo da nadjemo put do oba ciljna cvora
+        found_1 = found_2 = False
+        path_1 = list()
+        path_2 = set()
+        prev_nodes = dict()
+        visited_nodes = set()
+        nodes_to_visit = set()
+        g = dict()
+
+        prev_nodes[start_f1] = None
+        g[start_f1] = None
+        nodes_to_visit.add(start_f1)
+
+        while(len(nodes_to_visit) > 0 and not found_1):
+            state = None
+            for next_state in nodes_to_visit:
+                if state is None or g[state] > g[next_state]:
+                    state = next_state
+
+            if state == dest_1:
+                found_1 = True
+                break
+
+            for new_state in self.generate_figure_lines(state, stepXY, stepD):
+                if new_state not in visited_nodes and new_state not in nodes_to_visit:
+                    g[new_state] = self.h_dist(new_state, dest_1)
+                    nodes_to_visit.add(new_state)
+                    prev_nodes[new_state] = state
+            
+
+            nodes_to_visit.remove(state)
+            visited_nodes.add(state)
+        
+        if found_1:
+            state = dest_1
+            while prev_nodes[state] is not None:
+                path_1.append(state)
+                state = prev_nodes[state]
+            path_1.append(start_f1)
+            path_1.reverse()
+            print(path_1)
+        
+        return path_1
+                
+            
+
+
+
+    
