@@ -1,5 +1,6 @@
 import re
 import copy
+import itertools
 
 class Wall:
     def __init__(self, position: tuple[int, int], type):
@@ -123,16 +124,30 @@ class Game:
             newGame.changeBoardState(playerNumber, playerPosition, wallPosition, wallType)
             newGame.isPlayerOneNext = not self.isPlayerOneNext
             newGame.playerToMove= "x" if newGame.playerToMove=="o" else "x"
-            return newGame
+            return newGame #bilo je True
         return None # bilo je False
 
     def generateNextGameStates(self, game):
         next_states=[]
-        # koji je igrc na redu, za njegova oba igraca potezi + svi mooguci zidovi 
+        # koji je igrac na redu
         player= game.board.player1 if game.playerToMove=="x" else game.board.player2
-        next_states.append(game.generate_player_moves(0))
-        next_states.append(game.generate_player_moves(1))
-        print(next_states)
+        #potezi za svaku figuru
+        player0_moves=list(map(lambda pair : (0, pair), game.generate_player_moves(0)))
+        player1_moves=list(map(lambda pair : (1, pair), game.generate_player_moves(1)))
+        player_moves=[*player0_moves, *player1_moves]
+        #sve moguce pozicije za postavljanje zida, bilo plavi bilo zeleni - ukoliko je njihov br veci od 0
+        wall_moves=game.generate_wall_moves(game, player.greenWallNumber, player.blueWallNumber)
+        # ((br igraca, pozicija), zid)
+        next_states=list( itertools.product(player_moves, wall_moves) )
+        # lista Game-ova sa novom pozicijom i dodatim zidom
+        next_states=list(map(lambda params : game.createNewState(params[0][0], params[0][1], params[1].position, params[1].type) , next_states))
+        return next_states
+
+    #kreira novo stanje i menja mu poziciju i zid
+    def createNewState(self, playerNumber, playerPosition, wallPosition, wallType):
+        newGame=copy.deepcopy(self)
+        newGame.changeBoardState( playerNumber, playerPosition, wallPosition, wallType)
+        return newGame
 
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
@@ -246,20 +261,16 @@ class Game:
         return False
 
 
-    #menjano
-    def changeBoardState(self, game, playerNumber, playerPosition, wallPosition, wallType):
-        if game.isPlayerOneNext:
-            game.changePlayerStats(game.board.player1, wallType, playerPosition, playerNumber)
+    def changeBoardState(self,  playerNumber, playerPosition, wallPosition, wallType):
+        if self.isPlayerOneNext:
+            self.changePlayerStats(self.board.player1, wallType, playerPosition, playerNumber)
         else:
-            game.changePlayerStats(game.board.player2, wallType, playerPosition, playerNumber)
+            self.changePlayerStats(self.board.player2, wallType, playerPosition, playerNumber)
 
         if(len(wallPosition) == 2):    
-            game.board.walls.append(Wall(wallPosition, wallType))
+            self.board.walls.append(Wall(wallPosition, wallType))
 
-
-
-    #menjano
-    def changePlayerStats(player, wallType, playerPosition, playerNumber):
+    def changePlayerStats(self,player, wallType, playerPosition, playerNumber):
         player.positions = (
             player.positions[0] if playerNumber else playerPosition,
             player.positions[1] if not playerNumber else playerPosition,
@@ -289,21 +300,20 @@ class Game:
         
         return ret
 
-    def generate_wall_moves(self, game, vert, horiz):
+    def generate_wall_moves(self, game, green, blue):
         walls=list()
         for x in range(1, game.board.m ):
             for y in range(1, game.board.n):
-                if vert:
+                if green:
                     walls.append(Wall((x,y),"z"))
-                if horiz:
+                if blue:
                     walls.append(Wall((x,y),"p"))
         player= game.board.player1 if game.playerToMove=="x" else game.board.player2
-        walls=filter(lambda wall: game.isValidWallMove( player, wall.position, wall.type), walls)
-        for x in walls:
-            print(x.position, x.type) 
-        print('')
+        walls=list(filter(lambda wall: game.isValidWallMove( player, wall.position, wall.type), walls))
+        return walls
 
 game=Game()
-game.setBoard(Board(5,5,([5,5], [4,4]), ([1,1], [2,2]), 4))
-game.generate_wall_moves(game, True, True)
+game.setBoard(Board(22,28,([3,3], [1,1]), ([1,3], [3,1]), 4))
+stanja=game.generateNextGameStates(game )
+
 print('')
