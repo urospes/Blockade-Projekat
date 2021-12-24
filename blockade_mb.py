@@ -9,14 +9,12 @@ class Wall:
         self.position = position
         self.type = type
 
-
 class Player:
     def __init__(self, positions: tuple[list[int], list[int]], type, num_walls):
         self.positions = positions
         self.type = type
         self.greenWallNumber = num_walls
         self.blueWallNumber = num_walls
-
 
 class Board:
     def __init__(self, m, n, positions_p1: tuple[list[int], list[int]], positions_p2: tuple[list[int], list[int]], num_walls: int):
@@ -27,7 +25,6 @@ class Board:
         self.player1 = Player(positions_p1, "x", num_walls)
         self.player2 = Player(positions_p2, "o", num_walls)
         self.walls = []
-
 
 class Game:
     def __init__(self):
@@ -305,14 +302,13 @@ class Game:
 
     def generate_wall_moves(self, game, green, blue):
         walls=list()
-        if green:
-         for x in range(0, game.board.m-1):
+        
+        for x in range(0, game.board.m-1):
             for y in range(0, game.board.n-1):
-              walls.append(Wall((x,y),"z"))
-        if blue:
-         for x in range(0, game.board.m-1):
-            for y in range(0, game.board.n-1):
-              walls.append(Wall((x,y),"p"))      
+                if green:
+                    walls.append(Wall((x,y),"z"))
+                if blue:
+                    walls.append(Wall((x,y),"p"))      
         player= game.board.player1 if game.playerToMove=="x" else game.board.player2
         walls=list(filter(lambda wall: game.isValidWallMove( player, wall.position, wall.type), walls))
         return walls
