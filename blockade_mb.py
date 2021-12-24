@@ -1,6 +1,8 @@
 import re
 import copy
 import itertools
+from timeit import default_timer as timer
+from datetime import timedelta
 
 class Wall:
     def __init__(self, position: tuple[int, int], type):
@@ -108,24 +110,25 @@ class Game:
                 )
                 self.isPlayerOneNext = not self.isPlayerOneNext """
 
-    #menjano
     def nextMove(self, playerNumber, wallPosition, wallType, playerType, playerPosition):
-        """ if (self.isPlayerOneNext and currentPosition in self.board.player1.positions) or (not self.isPlayerOneNext and currentPosition in self.board.player2.positions):
-            if (self.board.player1.positions[0] == currentPosition) or (self.board.player2.positions[0] == currentPosition):
-                playerNumber = 0
-            else:
-                playerNumber = 1
-        else:
-            i = list(self.board.player1.positions)
-            j = currentPosition in i
-            return False """
-        if self.isValidMove(playerNumber, playerType, playerPosition, wallPosition, wallType):
-            newGame=copy.deepcopy(self)
-            newGame.changeBoardState(playerNumber, playerPosition, wallPosition, wallType, newGame.playerToMove)
-            newGame.isPlayerOneNext = not self.isPlayerOneNext
-            newGame.playerToMove= "x" if newGame.playerToMove=="o" else "x"
-            return newGame #bilo je True
-        return None # bilo je False
+        if playerType != self.playerToMove:
+            return False
+
+        if self.isValidMove(playerNumber, playerType, list(playerPosition), wallPosition, wallType):
+
+            self.changeBoardState(
+                playerNumber, playerPosition, wallPosition, wallType, playerType)
+            self.isPlayerOneNext = not self.isPlayerOneNext
+            self.playerToMove = "x" if self.playerToMove == "o" else "o"
+            return True
+        return False
+
+    def generateState(self, playerNumber, wallPosition, wallType, playerPosition):
+        newGame=copy.deepcopy(self)
+        newGame.changeBoardState(playerNumber, playerPosition, wallPosition, wallType, newGame.playerToMove)
+        newGame.isPlayerOneNext = not self.isPlayerOneNext
+        newGame.playerToMove= "x" if newGame.playerToMove=="o" else "x"
+        return newGame 
 
     def generateNextGameStates(self, game):
         next_states=[]
@@ -140,15 +143,13 @@ class Game:
         # ((br igraca, pozicija), zid)
         next_states=list( itertools.product(player_moves, wall_moves) )
         # lista Game-ova sa novom pozicijom i dodatim zidom
-        next_states=list(filter(lambda state : state!= None, map(lambda params : game.nextMove(params[0][0], params[1].position, params[1].type, game.playerToMove, params[0][1]) , next_states)))
+        next_states=list(filter(lambda state : state!= None, map(lambda params : game.generateState(params[0][0], params[1].position, params[1].type, params[0][1]) , next_states)))
         return next_states
 
-    '''#kreira novo stanje i menja mu poziciju i zid
-    #mozda ovo moze da se optimizuje? umesto deep copy pa menjanje da se odmah kreira novi Game sa parametrima
-    def createNewState(self, playerNumber, playerPosition, wallPosition, wallType):
+    """ def createNewState(self, playerNumber, playerPosition, wallPosition, wallType):
         newGame=copy.deepcopy(self)
         newGame.changeBoardState( playerNumber, playerPosition, wallPosition, wallType)
-        return newGame'''
+        return newGame """
 
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
@@ -261,7 +262,6 @@ class Game:
             return True
         return False
 
-
     def changeBoardState(self, playerNumber, playerPosition, wallPosition, wallType, playerType):
         if playerType == "x":
             self.changePlayerStats(
@@ -272,7 +272,6 @@ class Game:
 
         if(len(wallPosition) == 2):
             self.board.walls.append(Wall(wallPosition, wallType))
-
 
     def changePlayerStats(self,player, wallType, playerPosition, playerNumber):
         player.positions = (
@@ -306,19 +305,27 @@ class Game:
 
     def generate_wall_moves(self, game, green, blue):
         walls=list()
-        for x in range(0, game.board.m ):
-            for y in range(0, game.board.n):
-                if green:
-                    walls.append(Wall((x,y),"z"))
-                if blue:
-                    walls.append(Wall((x,y),"p"))
+        if green:
+         for x in range(0, game.board.m-1):
+            for y in range(0, game.board.n-1):
+              walls.append(Wall((x,y),"z"))
+        if blue:
+         for x in range(0, game.board.m-1):
+            for y in range(0, game.board.n-1):
+              walls.append(Wall((x,y),"p"))      
         player= game.board.player1 if game.playerToMove=="x" else game.board.player2
         walls=list(filter(lambda wall: game.isValidWallMove( player, wall.position, wall.type), walls))
         return walls
 
 game=Game()
-#game.setBoard(Board(22,28,([5,5], [10,10]), ([1,1], [1,0]), 4))
-game.setBoard(Board(4,4,([1,0], [1,1]), ([0,1], [0,0]), 4))
+game.setBoard(Board(11,14,([3,4], [6,4]), ([3,9], [6,9]), 4))
+#game.setBoard(Board(4,4,([1,0], [1,1]), ([0,1], [0,0]), 4))
 
+def test(game):
+    start = timer()
+    game.generateNextGameStates(game )
+    end = timer()
+    return ( str(timedelta(seconds = end - start)))
 
-print('')
+print(test(game))
+
