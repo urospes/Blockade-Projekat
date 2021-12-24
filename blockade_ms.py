@@ -23,7 +23,7 @@ class Board:
         self.startPositionsO = positions_p2
         self.player1 = Player(positions_p1, "x", num_walls)
         self.player2 = Player(positions_p2, "o", num_walls)
-        self.walls = []
+        self.walls = dict()
 
 
 class Game:
@@ -160,25 +160,21 @@ class Game:
             if wallPosition[0] < 0 or wallPosition[0] > self.board.m-1 or wallPosition[1] < 0 or wallPosition[1] > self.board.n-1:
                 print("Pozicije zida su van okvira table")
                 return False
-            allWalls = self.board.walls
             if wallType == "p":
                 if wallPosition[0] == self.board.m-1:
                     return False
-                if len(list(filter(lambda w: w.type == "p" and w.position[0] == wallPosition[0] and (w.position[1]-1 <= wallPosition[1] <= w.position[1]+1), allWalls))) > 0:
-                    print("Na tabli postoji zid koji zauzima ovu poziciju")
-                    return False
-                if len(list(filter(lambda w: w.type == "z" and w.position[0] == wallPosition[0] and w.position[1] == wallPosition[1], allWalls))) > 0:
+                if (wallPosition[0], wallPosition[1]-1, 'p') in self.board.walls or (wallPosition[0], wallPosition[1]+1, 'p') in self.board.walls:
                     print("Na tabli postoji zid koji zauzima ovu poziciju")
                     return False
             elif wallType == "z":
                 if wallPosition[1] == self.board.n-1:
                     return False
-                if len(list(filter(lambda w: w.type == "z" and w.position[1] == wallPosition[1] and (w.position[0]-1 <= wallPosition[0] <= w.position[0]+1), allWalls))) > 0:
+                if (wallPosition[0]-1, wallPosition[1], 'z') in self.board.walls or (wallPosition[0]+1, wallPosition[1], 'p') in self.board.walls:
                     print("Na tabli postoji zid koji zauzima ovu poziciju")
                     return False
-                if len(list(filter(lambda w: w.type == "p" and wallPosition[0] == w.position[0] and wallPosition[1] == w.position[1], allWalls))) > 0:
-                    print("Na tabli postoji zid koji zauzima ovu poziciju")
-                    return False
+            if (wallPosition[0], wallPosition[1], wallType) in self.board.walls:
+                print("Na tabli postoji zid koji zauzima ovu poziciju")
+                return False
             return True
 
     def isValidPlayerMove(self, currentPosition, nextPosition, otherPlayerPositions, otherPlayerStart, currentPosition2):
@@ -230,10 +226,18 @@ class Game:
             return False
 
     def isBlockedByWall(self, type, position, nextPosition):
-        if type == "p" and len(list(filter(lambda w: w.type == type and (w.position[1] == position[1] or w.position[1]+1 == position[1]) and (w.position[0] in range(*sorted([position[0], nextPosition[0]]))), self.board.walls))) > 0:
-            return True
-        elif type == "z" and len(list(filter(lambda w: w.type == type and (w.position[0] == position[0] or w.position[0]+1 == position[0]) and (w.position[1] in range(*sorted([position[1], nextPosition[1]]))), self.board.walls))) > 0:
-            return True
+        if type == 'p':
+            r = range(position[0], nextPosition[0]) if position[0] < nextPosition[0] else range(
+                nextPosition[0], position[0])
+            for i in r:
+                if (i, position[1], 'p') in self.board.walls or (i, position[1]-1, 'p') in self.board.walls:
+                    return True
+        else:
+            r = range(position[1], nextPosition[1]) if position[1] < nextPosition[1] else range(
+                nextPosition[1], position[1])
+            for i in r:
+                if (position[0], i, 'z') in self.board.walls or (position[0]-1, i, 'z') in self.board.walls:
+                    return True
         return False
 
     def changeBoardState(self, playerNumber, playerPosition, wallPosition, wallType, playerType):
@@ -245,7 +249,9 @@ class Game:
                 self.board.player2, wallType, playerPosition, playerNumber)
 
         if(len(wallPosition) == 2):
-            self.board.walls.append(Wall(wallPosition, wallType))
+            self.board.walls[(wallPosition[0], wallPosition[1], wallType)] = Wall(
+                wallPosition, wallType)
+            #self.board.walls.append(Wall(wallPosition, wallType))
 
     def changePlayerStats(self, player, wallType, playerPosition, playerNumber):
         player.positions = (
@@ -339,7 +345,7 @@ class Game:
             elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
                 if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
                     break
-            #print(next_pos)
+            # print(next_pos)
             ret.append(next_pos)
             pos = next_pos
             next_pos = (next_pos[0]-1, pos[1] - 1)
@@ -354,7 +360,7 @@ class Game:
             elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
                 if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
                     break
-            #print(next_pos)
+            # print(next_pos)
             ret.append(next_pos)
             pos = next_pos
             next_pos = (next_pos[0]-1, pos[1] + 1)
@@ -384,7 +390,7 @@ class Game:
             elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
                 if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
                     break
-            #print(next_pos)
+            # print(next_pos)
             ret.append(next_pos)
             pos = next_pos
             next_pos = (next_pos[0]+1, pos[1] + 1)
@@ -451,3 +457,9 @@ class Game:
             print(path_1)
 
         return path_1
+
+
+""" game = Game()
+game.getStartState()
+game.board.walls.append(Wall([5, 5], 'p'))
+print(game.isBlockedByWall('p', (1, 5), (9, 5))) """
