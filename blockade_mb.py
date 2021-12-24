@@ -121,7 +121,7 @@ class Game:
             return False """
         if self.isValidMove(playerNumber, playerType, playerPosition, wallPosition, wallType):
             newGame=copy.deepcopy(self)
-            newGame.changeBoardState(playerNumber, playerPosition, wallPosition, wallType)
+            newGame.changeBoardState(playerNumber, playerPosition, wallPosition, wallType, newGame.playerToMove)
             newGame.isPlayerOneNext = not self.isPlayerOneNext
             newGame.playerToMove= "x" if newGame.playerToMove=="o" else "x"
             return newGame #bilo je True
@@ -140,15 +140,15 @@ class Game:
         # ((br igraca, pozicija), zid)
         next_states=list( itertools.product(player_moves, wall_moves) )
         # lista Game-ova sa novom pozicijom i dodatim zidom
-        next_states=list(map(lambda params : game.createNewState(params[0][0], params[0][1], params[1].position, params[1].type) , next_states))
+        next_states=list(filter(lambda state : state!= None, map(lambda params : game.nextMove(params[0][0], params[1].position, params[1].type, game.playerToMove, params[0][1]) , next_states)))
         return next_states
 
-    #kreira novo stanje i menja mu poziciju i zid
+    '''#kreira novo stanje i menja mu poziciju i zid
     #mozda ovo moze da se optimizuje? umesto deep copy pa menjanje da se odmah kreira novi Game sa parametrima
     def createNewState(self, playerNumber, playerPosition, wallPosition, wallType):
         newGame=copy.deepcopy(self)
         newGame.changeBoardState( playerNumber, playerPosition, wallPosition, wallType)
-        return newGame
+        return newGame'''
 
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
@@ -262,14 +262,17 @@ class Game:
         return False
 
 
-    def changeBoardState(self,  playerNumber, playerPosition, wallPosition, wallType):
-        if self.isPlayerOneNext:
-            self.changePlayerStats(self.board.player1, wallType, playerPosition, playerNumber)
+    def changeBoardState(self, playerNumber, playerPosition, wallPosition, wallType, playerType):
+        if playerType == "x":
+            self.changePlayerStats(
+                self.board.player1, wallType, playerPosition, playerNumber)
         else:
-            self.changePlayerStats(self.board.player2, wallType, playerPosition, playerNumber)
+            self.changePlayerStats(
+                self.board.player2, wallType, playerPosition, playerNumber)
 
-        if(len(wallPosition) == 2):    
+        if(len(wallPosition) == 2):
             self.board.walls.append(Wall(wallPosition, wallType))
+
 
     def changePlayerStats(self,player, wallType, playerPosition, playerNumber):
         player.positions = (
@@ -314,7 +317,8 @@ class Game:
         return walls
 
 game=Game()
-game.setBoard(Board(4,4,([0,0], [0,1]), ([1,1], [1,0]), 4))
-stanja=game.generateNextGameStates(game )
+#game.setBoard(Board(22,28,([5,5], [10,10]), ([1,1], [1,0]), 4))
+game.setBoard(Board(4,4,([1,0], [1,1]), ([0,1], [0,0]), 4))
+
 
 print('')
