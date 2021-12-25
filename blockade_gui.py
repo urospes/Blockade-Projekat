@@ -1,7 +1,9 @@
 import pygame
 import consts as const
 from sys import exit
-import blockade as bl
+import blockade_mb as bl
+from timeit import default_timer as timer
+from datetime import timedelta
 
 pygame.init()
 
@@ -105,7 +107,7 @@ def DrawLabels(game_rect: pygame.Rect, size: tuple[int, int], offset: int):
 
 
 # funkcija koja crta zidove na tabli
-def DrawWalls(board_rect: pygame.Rect, walls: bl.Wall):
+def DrawWalls(board_rect: pygame.Rect, walls):
 
     for wall in walls:
         wall_rect = None
@@ -363,7 +365,15 @@ while True:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_k:
-                move_state.game.check_red_paths(0, 0)
+                game.check_for_paths()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_g:
+                    start = timer()
+                    stanja=game.generateNextGameStates(game )
+                    end = timer()
+                    print( str(timedelta(seconds = end - start)))
+                    print( len(stanja))
 
         if event.type == MOVE_FINISHED:
             # igranje poteza
@@ -398,3 +408,6 @@ while True:
     # update
     pygame.display.update()
     clock.tick(60)
+
+
+

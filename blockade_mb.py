@@ -2,12 +2,10 @@ import re
 import copy
 import itertools
 from timeit import default_timer as timer
+import time
+from math import sqrt
 from datetime import timedelta
 
-class Wall:
-    def __init__(self, position: tuple[int, int], type):
-        self.position = position
-        self.type = type
 
 class Player:
     def __init__(self, positions: tuple[list[int], list[int]], type, num_walls):
@@ -113,10 +111,12 @@ class Game:
 
         if self.isValidMove(playerNumber, playerType, list(playerPosition), wallPosition, wallType):
             # generise stanje i onda da se proveri da l zatvara, pa to stanje se salje u change 
-            self.changeBoardState(playerNumber, playerPosition, wallPosition, wallType, playerType)
-            self.isPlayerOneNext = not self.isPlayerOneNext
-            self.playerToMove = "x" if self.playerToMove == "o" else "o"
-            return True
+            newState=self.generateState(playerNumber, wallPosition, wallType, playerPosition)
+            if (newState):
+                self.changeBoardState(playerNumber, playerPosition, wallPosition, wallType, playerType)
+                self.isPlayerOneNext = not self.isPlayerOneNext
+                self.playerToMove = "x" if self.playerToMove == "o" else "o"
+                return True
         return False
 
     def generateState(self, playerNumber, wallPosition, wallType, playerPosition):
@@ -125,7 +125,7 @@ class Game:
         newGame.isPlayerOneNext = not self.isPlayerOneNext
         newGame.playerToMove= "x" if newGame.playerToMove=="o" else "x"
         # provera da li zatvara
-        return newGame 
+        return newGame if newGame.check_for_paths() else None
 
     def generateNextGameStates(self, game):
         next_states=[]
@@ -192,10 +192,10 @@ class Game:
             elif wallType == "z":
                 if wallPosition[1] == self.board.n-1:
                     return False
-                if (wallPosition[0]-1, wallPosition[1], 'z') in self.board.walls or (wallPosition[0]+1, wallPosition[1], 'p') in self.board.walls:
+                if (wallPosition[0]-1, wallPosition[1], 'z') in self.board.walls or (wallPosition[0]+1, wallPosition[1], 'z') in self.board.walls:
                     #print("Na tabli postoji zid koji zauzima ovu poziciju")
                     return False
-            if (wallPosition[0], wallPosition[1], wallType) in self.board.walls:
+            if (wallPosition[0], wallPosition[1], 'z') in self.board.walls or (wallPosition[0], wallPosition[1], 'p') in self.board.walls:
                 #print("Na tabli postoji zid koji zauzima ovu poziciju")
                 return False
             return True
@@ -319,6 +319,203 @@ class Game:
         player= game.board.player1 if game.playerToMove=="x" else game.board.player2
         walls=set(filter(lambda wall: game.isValidWallMove( player, [wall[0], wall[1]], wall[2]), walls))
         return walls
+
+    def generate_figure_lines(self, stepXY, state, visited, to_visit):
+        ret = list()
+        pos = state
+
+        new_row = pos[0] + stepXY
+        if new_row < self.board.m:
+            next_pos = (new_row, pos[1])
+            if next_pos not in visited and next_pos not in to_visit:
+                if not self.isBlockedByWall('p', pos, next_pos):
+                    ret.append(next_pos)
+        
+        new_row = pos[0] - stepXY
+        if new_row >= 0:
+            next_pos = (new_row, pos[1])
+            if next_pos not in visited and next_pos not in to_visit:
+                if not self.isBlockedByWall('p', pos, next_pos):
+                    ret.append(next_pos)
+
+
+        new_col = pos[1] + stepXY
+        if new_col < self.board.n:
+            next_pos = (pos[0], new_col)
+            if next_pos not in visited and next_pos not in to_visit:
+                if not self.isBlockedByWall('z', pos, next_pos):
+                    ret.append(next_pos)
+        
+        new_col = pos[1] - stepXY
+        if new_col >= 0:
+            next_pos = (pos[0], new_col)
+            if next_pos not in visited and next_pos not in to_visit:
+                if not self.isBlockedByWall('z', pos, next_pos):
+                    ret.append(next_pos)
+        
+        ret.extend(self.generate_figure_diagonal_lines(state, visited, to_visit))
+        return ret
+    
+    def generate_figure_diagonal_lines(self, state, visited, to_visit):
+        ret = list()
+        pos = state
+
+        new_row = pos[0] - 1
+        new_col = pos[1] - 1
+
+        if new_row >= 0 and new_col >= 0:
+            next_pos = (new_row, new_col)
+            if next_pos not in visited and next_pos not in to_visit:
+                if self.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
+                    if not (self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
+                        ret.append(next_pos)
+                elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                    if not (self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
+                        ret.append(next_pos)
+                else:
+                    ret.append(next_pos)
+            
+
+        new_row = pos[0] - 1
+        new_col = pos[1] + 1
+        
+        if new_row >= 0 and new_col < self.board.n:
+            next_pos = (new_row, new_col)
+            if next_pos not in visited and next_pos not in to_visit:
+                if self.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
+                    if not (self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
+                        ret.append(next_pos)
+                elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                    if not (self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
+                        ret.append(next_pos)
+                else:
+                    ret.append(next_pos)
+
+        new_row = pos[0] + 1
+        new_col = pos[1] - 1
+
+        if new_row < self.board.m and new_col >= 0:
+            next_pos = (new_row, new_col)
+            if next_pos not in visited and next_pos not in to_visit:
+                if self.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
+                    if not (self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
+                        ret.append(next_pos)
+                elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                    if not (self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
+                        ret.append(next_pos)
+                else:
+                    ret.append(next_pos)
+        
+
+        new_row = pos[0] + 1
+        new_col = pos[1] + 1
+
+        if new_row < self.board.m and new_col < self.board.n:
+            next_pos = (new_row, new_col)
+            if next_pos not in visited and next_pos not in to_visit:
+                if self.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
+                    if not (self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
+                        ret.append(next_pos)
+                elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                    if not (self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
+                        ret.append(next_pos)
+                else:
+                    ret.append(next_pos)
+
+        return ret
+
+    def h_dist(self, state, dest):
+        if state[0] - dest[0] == state[1] - dest[1]:
+            return abs(state[0] - dest[0])
+            #return abs(state[0] - dest[0]) + abs(state[1] - dest[1])
+        return sqrt((state[0] - dest[0]) ** 2 + (state[1] - dest[1]) ** 2)
+
+    #proveravamo da li zid blokira put do oba odredisna polja
+    def check_for_paths(self) -> bool:
+        #ovde idu provere za 2 i 3 i 4 zida, za 5 krecemo trazenje od svake figurice do oba ciljna polja
+
+        #if len(self.board.walls) == 2:
+            
+
+        #trazenje puteva
+        return self.check_all_paths(tuple(self.board.player1.positions[0]), tuple(self.board.player1.positions[1]), tuple(self.board.startPositionsO[0]), tuple(self.board.startPositionsO[1])) and \
+        self.check_all_paths(tuple(self.board.player2.positions[0]), tuple(self.board.player2.positions[1]), tuple(self.board.startPositionsX[0]), tuple(self.board.startPositionsX[1]))
+    
+    def check_for_path(self, start_node, end_node, paths) -> tuple[bool, set]:
+
+        #start = time.time()
+        """ start_f1 = tuple(self.board.player1.positions[0])
+        start_f2 = tuple(self.board.player2.positions[1])
+        dest_1 = tuple(self.board.startPositionsO[0])
+        dest_2 = tuple(self.board.startPositionsO[1]) """
+
+        found = False
+        prev_nodes = dict()
+        visited_nodes = set()
+        nodes_to_visit = set()
+
+        prev_nodes[start_node] = None
+        nodes_to_visit.add(start_node)
+
+        while(len(nodes_to_visit) > 0 and not found):
+            state = None
+            for next_state in nodes_to_visit:
+                if next_state in paths:
+                    state = next_state
+                    break
+                #if state is None or g[next_state] + self.h_dist(next_state, dest_1) < g[state] + self.h_dist(state, dest_1):
+                if state is None or self.h_dist(next_state, end_node) < self.h_dist(state, end_node):
+                    state = next_state
+
+            if state == end_node:
+                found = True
+                break
+
+            stepXY = 1 if self.h_dist(state, end_node) == 1 else 2
+            for new_state in self.generate_figure_lines(stepXY, state, visited_nodes, nodes_to_visit):
+                if new_state not in visited_nodes and new_state not in nodes_to_visit:
+                    #g[new_state] = self.h_dist(new_state, start_f1)
+                    nodes_to_visit.add(new_state)
+                    prev_nodes[new_state] = state
+                #elif new_state in nodes_to_visit:
+                    #new_dist = self.h_dist(new_state, state)
+                    #if g[new_state] > g[state] + new_dist:
+                        #g[new_state] = g[state] + new_dist
+                        #prev_nodes[new_state] = state
+            
+
+            nodes_to_visit.remove(state)
+            visited_nodes.add(state)
+        
+        if not found:
+            return (False, set())
+        
+        #ako je nadjen put dodajemo na prthodni put nove cvorove
+        state = end_node
+        while prev_nodes[state] is not None:
+            paths.add(state)
+            state = prev_nodes[state]
+        paths.add(start_node)
+        
+        #end = time.time()
+        #print(start_node, end_node)
+        #print(paths)
+        #print("A* : " +  str(end - start))
+        return (True, paths)
+
+    def check_all_paths(self, p_pos1, p_pos2, s_dest1, s_dest2) -> bool:
+        paths = set()
+
+        res = self.check_for_path(s_dest1, s_dest2, paths)
+        if res[0] == False:
+            return False
+
+        res = self.check_for_path(p_pos1, s_dest1, paths)
+        if res[0] == False:
+            return False
+        
+        res = self.check_for_path(p_pos2, s_dest1, paths)
+        return res[0]
 
 game=Game()
 game.setBoard(Board(16,14,([3,4], [6,4]), ([3,9], [6,9]), 4))

@@ -252,7 +252,7 @@ class Game:
                 self.board.player2, wallType, playerPosition, playerNumber)
 
         if(len(wallPosition) == 2):
-            self.board.add(wallPosition[0], wallPosition[1], wallType)
+            self.board.walls.add((wallPosition[0], wallPosition[1], wallType))
 
     def changePlayerStats(self, player, wallType, playerPosition, playerNumber):
         player.positions = (
