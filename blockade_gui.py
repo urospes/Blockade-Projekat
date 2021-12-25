@@ -1,7 +1,7 @@
 import pygame
 import consts as const
 from sys import exit
-import blockade_ms as bl
+import blockade as bl
 
 pygame.init()
 
