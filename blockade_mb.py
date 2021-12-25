@@ -112,9 +112,8 @@ class Game:
             return False
 
         if self.isValidMove(playerNumber, playerType, list(playerPosition), wallPosition, wallType):
-
-            self.changeBoardState(
-                playerNumber, playerPosition, wallPosition, wallType, playerType)
+            # generise stanje i onda da se proveri da l zatvara, pa to stanje se salje u change 
+            self.changeBoardState(playerNumber, playerPosition, wallPosition, wallType, playerType)
             self.isPlayerOneNext = not self.isPlayerOneNext
             self.playerToMove = "x" if self.playerToMove == "o" else "o"
             return True
@@ -125,6 +124,7 @@ class Game:
         newGame.changeBoardState(playerNumber, playerPosition, wallPosition, wallType, newGame.playerToMove)
         newGame.isPlayerOneNext = not self.isPlayerOneNext
         newGame.playerToMove= "x" if newGame.playerToMove=="o" else "x"
+        # provera da li zatvara
         return newGame 
 
     def generateNextGameStates(self, game):
@@ -147,6 +147,7 @@ class Game:
         newGame=copy.deepcopy(self)
         newGame.changeBoardState( playerNumber, playerPosition, wallPosition, wallType)
         return newGame """
+
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
             return False
