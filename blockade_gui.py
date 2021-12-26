@@ -1,9 +1,10 @@
 import pygame
 import consts as const
 from sys import exit
-import blockade_mb as bl
+import blockade as bl
 from timeit import default_timer as timer
 from datetime import timedelta
+import blockade_ai as b_ai
 
 pygame.init()
 
@@ -352,6 +353,7 @@ game_end = False
 MOVE_FINISHED = pygame.USEREVENT + 1
 
 move_state = MoveState(game, None)
+ai = b_ai.BlockadeAI(game)
 while True:
 
     for event in pygame.event.get():
@@ -365,12 +367,12 @@ while True:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_k:
-                game.check_for_paths()
+                ai.check_for_paths()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_g:
                     start = timer()
-                    stanja=game.generateNextGameStates(game )
+                    stanja=game.generateNextGameStates(game)
                     end = timer()
                     print( str(timedelta(seconds = end - start)))
                     print( len(stanja))

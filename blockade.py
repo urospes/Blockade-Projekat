@@ -1,11 +1,7 @@
 import re
-
-
-class Wall:
-    def __init__(self, position: tuple[int, int], type):
-        self.position = position
-        self.type = type
-
+import copy
+from itertools import product
+import blockade_ai
 
 class Player:
     def __init__(self, positions: tuple[list[int], list[int]], type, num_walls):
@@ -23,7 +19,7 @@ class Board:
         self.startPositionsO = positions_p2
         self.player1 = Player(positions_p1, "x", num_walls)
         self.player2 = Player(positions_p2, "o", num_walls)
-        self.walls = []
+        self.walls = set()
 
 
 class Game:
@@ -117,20 +113,51 @@ class Game:
             return False
 
         if self.isValidMove(playerNumber, playerType, list(playerPosition), wallPosition, wallType):
-
-            self.changeBoardState(
-                playerNumber, playerPosition, wallPosition, wallType, playerType)
-            self.isPlayerOneNext = not self.isPlayerOneNext
-            self.playerToMove = "x" if self.playerToMove == "o" else "o"
-            return True
+            # generise stanje i onda da se proveri da l zatvara, pa to stanje se salje u change 
+            newState=self.generateState(playerNumber, wallPosition, wallType, playerPosition)
+            if (newState):
+                self.changeBoardState(playerNumber, playerPosition, wallPosition, wallType, playerType)
+                self.isPlayerOneNext = not self.isPlayerOneNext
+                self.playerToMove = "x" if self.playerToMove == "o" else "o"
+                return True
         return False
+    
+
+    def generateState(self, playerNumber, wallPosition, wallType, playerPosition):
+        newGame=copy.deepcopy(self)
+        newGame.changeBoardState(playerNumber, playerPosition, wallPosition, wallType, newGame.playerToMove)
+        newGame.isPlayerOneNext = not self.isPlayerOneNext
+        newGame.playerToMove= "x" if newGame.playerToMove=="o" else "x"
+        # provera da li zatvara
+        ai = blockade_ai.BlockadeAI(newGame)
+        return newGame if ai.check_for_paths() else None
+
+
+
+    def generateNextGameStates(self, game):
+        next_states=[]
+        # koji je igrac na redu
+        player= game.board.player1 if game.playerToMove=="x" else game.board.player2
+        #potezi za svaku figuru
+        player0_moves=list(map(lambda pair : (0, pair), game.generate_player_moves(0)))
+        player1_moves=list(map(lambda pair : (1, pair), game.generate_player_moves(1)))
+        player_moves=[*player0_moves, *player1_moves]
+        #sve moguce pozicije za postavljanje zida, bilo plavi bilo zeleni - ukoliko je njihov br veci od 0
+        wall_moves=game.generate_wall_moves(game, player.greenWallNumber, player.blueWallNumber)
+        # ((br igraca, pozicija), zid)
+        next_states=list(product(player_moves, wall_moves) )
+        # lista Game-ova sa novom pozicijom i dodatim zidom
+        next_states=list(filter(lambda state : state!= None, map(lambda params : game.generateState(params[0][0], [params[1][0], params[1][1]], params[1][2], params[0][1]) , next_states)))
+        return next_states
+
+
 
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
             return False
 
         if(self.playerToMove != playerType):
-            print("Drugi igrac je na redu")
+            #print("Drugi igrac je na redu")
             return False
 
         player = self.board.player1 if playerType == "x" else self.board.player2
@@ -139,7 +166,7 @@ class Game:
         # return False
         if player.greenWallNumber > 0 or player.blueWallNumber > 0:
             if len(wallPosition) == 0:
-                print("Niste uneli pozicije zida")
+                #print("Niste uneli pozicije zida")
                 return False
             if not self.isValidWallMove(player, wallPosition, wallType):
                 return False
@@ -154,38 +181,34 @@ class Game:
     def isValidWallMove(self, player, wallPosition, wallType):
         if len(wallPosition) == 2:
             if (player.greenWallNumber == 0 and wallType == "z") or (player.blueWallNumber == 0 and wallType == "p"):
-                print("Iskoristili ste sve zidove ove boje")
+                #print("Iskoristili ste sve zidove ove boje")
                 return False
             # dozvoljeno je da stavi zid te boje, provera da li su pozicije zida validne
             if wallPosition[0] < 0 or wallPosition[0] > self.board.m-1 or wallPosition[1] < 0 or wallPosition[1] > self.board.n-1:
-                print("Pozicije zida su van okvira table")
+                #print("Pozicije zida su van okvira table")
                 return False
-            allWalls = self.board.walls
             if wallType == "p":
                 if wallPosition[0] == self.board.m-1:
                     return False
-                if len(list(filter(lambda w: w.type == "p" and w.position[0] == wallPosition[0] and (w.position[1]-1 <= wallPosition[1] <= w.position[1]+1), allWalls))) > 0:
-                    print("Na tabli postoji zid koji zauzima ovu poziciju")
-                    return False
-                if len(list(filter(lambda w: w.type == "z" and w.position[0] == wallPosition[0] and w.position[1] == wallPosition[1], allWalls))) > 0:
-                    print("Na tabli postoji zid koji zauzima ovu poziciju")
+                if (wallPosition[0], wallPosition[1]-1, 'p') in self.board.walls or (wallPosition[0], wallPosition[1]+1, 'p') in self.board.walls:
+                    #print("Na tabli postoji zid koji zauzima ovu poziciju")
                     return False
             elif wallType == "z":
                 if wallPosition[1] == self.board.n-1:
                     return False
-                if len(list(filter(lambda w: w.type == "z" and w.position[1] == wallPosition[1] and (w.position[0]-1 <= wallPosition[0] <= w.position[0]+1), allWalls))) > 0:
-                    print("Na tabli postoji zid koji zauzima ovu poziciju")
+                if (wallPosition[0]-1, wallPosition[1], 'z') in self.board.walls or (wallPosition[0]+1, wallPosition[1], 'z') in self.board.walls:
+                    #print("Na tabli postoji zid koji zauzima ovu poziciju")
                     return False
-                if len(list(filter(lambda w: w.type == "p" and wallPosition[0] == w.position[0] and wallPosition[1] == w.position[1], allWalls))) > 0:
-                    print("Na tabli postoji zid koji zauzima ovu poziciju")
-                    return False
+            if (wallPosition[0], wallPosition[1], 'z') in self.board.walls or (wallPosition[0], wallPosition[1], 'p') in self.board.walls:
+                #print("Na tabli postoji zid koji zauzima ovu poziciju")
+                return False
             return True
 
     def isValidPlayerMove(self, currentPosition, nextPosition, otherPlayerPositions, otherPlayerStart, currentPosition2):
         if nextPosition == currentPosition2:
             return False
         if nextPosition[0] < 0 or nextPosition[0] > self.board.m-1 or nextPosition[1] < 0 or nextPosition[1] > self.board.n-1:
-            print("Pozicije zida su van okvira table")
+            #print("Pozicije zida su van okvira table")
             return False
         movedY = abs(currentPosition[0]-nextPosition[0])
         movedX = abs(currentPosition[1]-nextPosition[1])
@@ -230,11 +253,21 @@ class Game:
             return False
 
     def isBlockedByWall(self, type, position, nextPosition):
-        if type == "p" and len(list(filter(lambda w: w.type == type and (w.position[1] == position[1] or w.position[1]+1 == position[1]) and (w.position[0] in range(*sorted([position[0], nextPosition[0]]))), self.board.walls))) > 0:
-            return True
-        elif type == "z" and len(list(filter(lambda w: w.type == type and (w.position[0] == position[0] or w.position[0]+1 == position[0]) and (w.position[1] in range(*sorted([position[1], nextPosition[1]]))), self.board.walls))) > 0:
-            return True
+        if type == 'p':
+            r = range(position[0], nextPosition[0]) if position[0] < nextPosition[0] else range(
+                nextPosition[0], position[0])
+            for i in r:
+                if (i, position[1], 'p') in self.board.walls or (i, position[1]-1, 'p') in self.board.walls:
+                    return True
+        else:
+            r = range(position[1], nextPosition[1]) if position[1] < nextPosition[1] else range(
+                nextPosition[1], position[1])
+            for i in r:
+                if (position[0], i, 'z') in self.board.walls or (position[0]-1, i, 'z') in self.board.walls:
+                    return True
         return False
+
+
 
     def changeBoardState(self, playerNumber, playerPosition, wallPosition, wallType, playerType):
         if playerType == "x":
@@ -245,7 +278,9 @@ class Game:
                 self.board.player2, wallType, playerPosition, playerNumber)
 
         if(len(wallPosition) == 2):
-            self.board.walls.append(Wall(wallPosition, wallType))
+            self.board.walls.add((wallPosition[0], wallPosition[1], wallType))
+
+
 
     def changePlayerStats(self, player, wallType, playerPosition, playerNumber):
         player.positions = (
@@ -256,6 +291,8 @@ class Game:
             player.greenWallNumber -= 1
         elif wallType == "p":
             player.blueWallNumber -= 1
+
+
 
     def generate_player_moves(self, figure_num):
         figure_pos = self.board.player1.positions[
@@ -280,165 +317,16 @@ class Game:
 
         return ret
 
-    def generate_figure_lines(self, state, stepXY, stepD):
-        ret = list()
 
-        pos = state
-        next_pos = (pos[0] + 2, pos[1])
-        while next_pos[0] < self.board.m:
-            if not self.isBlockedByWall('p', pos, next_pos):
-                ret.append(next_pos)
-                pos = next_pos
-                next_pos = (next_pos[0] + 2, pos[1])
-            else:
-                break
 
-        pos = state
-        next_pos = (pos[0] - 2, pos[1])
-        while next_pos[0] >= 0:
-            if not self.isBlockedByWall('p', pos, next_pos):
-                ret.append(next_pos)
-                pos = next_pos
-                next_pos = (next_pos[0] - 2, pos[1])
-            else:
-                break
-
-        pos = state
-        next_pos = (pos[0], pos[1] + 2)
-        while next_pos[1] < self.board.n:
-            if not self.isBlockedByWall('z', pos, next_pos):
-                ret.append(next_pos)
-                pos = next_pos
-                next_pos = (next_pos[0], pos[1] + 2)
-            else:
-                break
-
-        pos = state
-        next_pos = (pos[0], pos[1] - 2)
-        while next_pos[1] >= 0:
-            if not self.isBlockedByWall('z', pos, next_pos):
-                ret.append(next_pos)
-                pos = next_pos
-                next_pos = (next_pos[0], pos[1] - 2)
-            else:
-                break
-
-        ret.append(self.generate_figure_diagonal_lines(state, stepXY, stepD))
-        return ret
-
-    def generate_figure_diagonal_lines(self, state, stepXY, stepD):
-        ret = list()
-        pos = state
-        next_pos = (pos[0] - 1, pos[1] - 1)
-        while next_pos[0] >= 0 and next_pos[1] >= 0:
-            if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
-                if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
-                    break
-            elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
-                if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
-                    break
-            ret.append(next_pos)
-            pos = next_pos
-            next_pos = (next_pos[0]-1, pos[1] - 1)
-
-        pos = state
-        next_pos = (pos[0] - 1, pos[1] + 1)
-        while next_pos[0] >= 0 and next_pos[1] < self.board.n:
-            if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
-                if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
-                    break
-            elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
-                if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
-                    break
-            ret.append(next_pos)
-            pos = next_pos
-            next_pos = (next_pos[0]-1, pos[1] + 1)
-
-        pos = state
-        next_pos = (pos[0] + 1, pos[1] - 1)
-        while next_pos[0] < self.board.m and next_pos[1] >= 0:
-            if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
-                if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
-                    break
-            elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
-                if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
-                    break
-            ret.append(next_pos)
-            pos = next_pos
-            next_pos = (next_pos[0]+1, pos[1] - 1)
-
-        pos = state
-        next_pos = (pos[0] + 1, pos[1] + 1)
-        while next_pos[0] < self.board.m and next_pos[1] < self.board.n:
-            if self.isBlockedByWall("p", pos, (next_pos[0], next_pos[1])):
-                if self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.isBlockedByWall("z", pos, (pos[0], next_pos[1])):
-                    break
-            elif self.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
-                if self.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos):
-                    break
-            ret.append(next_pos)
-            pos = next_pos
-            next_pos = (next_pos[0]+1, pos[1] + 1)
-
-        return ret
-
-    def h_dist(self, state, dest):
-        if state[0] - dest[0] == state[1] - dest[1]:
-            return state[0] - dest[0]
-        else:
-            return abs(state[0] - dest[0]) + abs(state[1] - dest[1])
-
-    # proveravamo da li zid blokira put do oba odredisna polja
-
-    def check_for_paths() -> bool:
-        return
-
-    def check_red_paths(self, stepXY: int, stepD: int) -> bool:
-
-        start_f1 = tuple(self.board.player1.positions[0])
-        start_f2 = tuple(self.board.player2.positions[1])
-        dest_1 = tuple(self.board.startPositionsO[0])
-        dest_2 = tuple(self.board.startPositionsO[1])
-
-        # moramo da nadjemo put do oba ciljna cvora
-        found_1 = found_2 = False
-        path_1 = list()
-        path_2 = set()
-        prev_nodes = dict()
-        visited_nodes = set()
-        nodes_to_visit = set()
-        g = dict()
-
-        prev_nodes[start_f1] = None
-        g[start_f1] = None
-        nodes_to_visit.add(start_f1)
-
-        while(len(nodes_to_visit) > 0 and not found_1):
-            state = None
-            for next_state in nodes_to_visit:
-                if state is None or g[state] > g[next_state]:
-                    state = next_state
-
-            if state == dest_1:
-                found_1 = True
-                break
-
-            for new_state in self.generate_figure_lines(state, stepXY, stepD):
-                if new_state not in visited_nodes and new_state not in nodes_to_visit:
-                    g[new_state] = self.h_dist(new_state, dest_1)
-                    nodes_to_visit.add(new_state)
-                    prev_nodes[new_state] = state
-
-            nodes_to_visit.remove(state)
-            visited_nodes.add(state)
-
-        if found_1:
-            state = dest_1
-            while prev_nodes[state] is not None:
-                path_1.append(state)
-                state = prev_nodes[state]
-            path_1.append(start_f1)
-            path_1.reverse()
-            print(path_1)
-
-        return path_1
+    def generate_wall_moves(self, game, green, blue):
+        walls=set()
+        for x in range(0, game.board.m-1): 
+            for y in range(0, game.board.n-1): 
+                if green:
+                    walls.add((x, y, "z"))
+                if blue:
+                   walls.add((x, y, "p"))   
+        player= game.board.player1 if game.playerToMove=="x" else game.board.player2
+        walls=set(filter(lambda wall: game.isValidWallMove( player, [wall[0], wall[1]], wall[2]), walls))
+        return walls
