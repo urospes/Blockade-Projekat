@@ -138,8 +138,7 @@ class BlockadeAI:
     def h_dist(self, state, dest):
         if state[0] - dest[0] == state[1] - dest[1]:
             return abs(state[0] - dest[0])
-            #return abs(state[0] - dest[0]) + abs(state[1] - dest[1])
-        return sqrt((state[0] - dest[0]) ** 2 + (state[1] - dest[1]) ** 2)
+        return abs(state[0] - dest[0]) + abs(state[1] - dest[1])
 
 
 
@@ -185,14 +184,8 @@ class BlockadeAI:
             stepXY = 1 if self.h_dist(state, end_node) == 1 else 2
             for new_state in self.generate_figure_lines(stepXY, state, visited_nodes, nodes_to_visit):
                 if new_state not in visited_nodes and new_state not in nodes_to_visit:
-                    #g[new_state] = self.h_dist(new_state, start_f1)
                     nodes_to_visit.add(new_state)
                     prev_nodes[new_state] = state
-                #elif new_state in nodes_to_visit:
-                    #new_dist = self.h_dist(new_state, state)
-                    #if g[new_state] > g[state] + new_dist:
-                        #g[new_state] = g[state] + new_dist
-                        #prev_nodes[new_state] = state
             
 
             nodes_to_visit.remove(state)

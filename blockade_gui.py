@@ -10,6 +10,7 @@ pygame.init()
 
 game = bl.Game()
 game.getStartState()
+
 const.SQUARE = 40 if game.board.m < 13 else 30 if game.board.m < 18 else 24
 const.WALL_W = 10 if game.board.m < 13 else 7
 const.WALL_H = 2 * const.SQUARE + const.WALL_W
