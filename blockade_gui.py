@@ -372,11 +372,11 @@ while True:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_g:
-                    start = timer()
-                    stanja=game.generateNextGameStates(game)
-                    end = timer()
-                    print( str(timedelta(seconds = end - start)))
-                    print( len(stanja))
+                start = timer()
+                stanja = game.generateNextGameStates(game)
+                end = timer()
+                print(str(timedelta(seconds=end - start)))
+                print(len(stanja))
 
         if event.type == MOVE_FINISHED:
             # igranje poteza
@@ -411,6 +411,3 @@ while True:
     # update
     pygame.display.update()
     clock.tick(60)
-
-
-
