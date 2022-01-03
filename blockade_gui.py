@@ -1,7 +1,8 @@
 import pygame
+from pygame.constants import K_p
 import consts as const
 from sys import exit
-import blockade as bl
+import blockade_ms as bl
 from timeit import default_timer as timer
 from datetime import timedelta
 import blockade_ai as b_ai
@@ -10,6 +11,25 @@ pygame.init()
 
 game = bl.Game()
 game.getStartState()
+
+game.board.walls.add((7, 10, 'p'))
+game.board.walls.add((3, 3, 'p'))
+game.board.walls.add((3, 9, 'p'))
+game.board.walls.add((3, 1, 'p'))
+game.board.walls.add((5, 10, 'p'))
+game.board.walls.add((6, 2, 'p'))
+
+game.board.walls.add((2, 1, 'z'))
+game.board.walls.add((2, 3, 'z'))
+game.board.walls.add((2, 9, 'z'))
+game.board.walls.add((3, 7, 'z'))
+game.board.walls.add((4, 4, 'z'))
+game.board.walls.add((5, 7, 'z'))
+game.board.walls.add((7, 4, 'z'))
+game.board.walls.add((6, 9, 'z'))
+
+game.board.player1.positions = ([2, 0], [2, 2])
+game.board.player2.positions = ([1, 12], [2, 13])
 
 const.SQUARE = 40 if game.board.m < 13 else 30 if game.board.m < 18 else 24
 const.WALL_W = 10 if game.board.m < 13 else 7

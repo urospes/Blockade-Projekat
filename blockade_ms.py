@@ -96,13 +96,13 @@ class Game:
                 otherPlayerPositions = []
                 print("Dva igraca ne mogu biti na istoj poziciji.")
             else:
-                for i in range (2):
+                for i in range(2):
                     for j in range(2):
-                        if playerPositions[i][0]==otherPlayerPositions[j*2] and playerPositions[i][1]==otherPlayerPositions[j*2+1]:
+                        if playerPositions[i][0] == otherPlayerPositions[j*2] and playerPositions[i][1] == otherPlayerPositions[j*2+1]:
                             otherPlayerPositions = []
                             print("Crveni igrac vec zauzima ovu poziciju")
                             break
-                    if otherPlayerPositions==[]:
+                    if otherPlayerPositions == []:
                         break
 
         otherPlayerPositions = ([otherPlayerPositions[0], otherPlayerPositions[1]], [
@@ -160,6 +160,44 @@ class Game:
                 return True
         return False
 
+    def checkNewWall(self, wallPosition, wallType):
+        num = 0
+        if wallType == 'p':
+            if wallPosition[1] == 0 or wallPosition[1] == self.board.n-2:
+                num = num+1
+            positions = [(wallPosition[0], wallPosition[1]-2, 'p'),
+                         (wallPosition[0], wallPosition[1]+2, 'p')]
+            for p in positions:
+                if p in self.board.walls:
+                    num = num+1
+                    if num == 2:
+                        # print("true")
+                        return True
+        else:
+            if wallPosition[0] == 0 or wallPosition[0] == self.board.m-2:
+                num = num+1
+            positions = [(wallPosition[0]-2, wallPosition[1], 'z'),
+                         (wallPosition[0]+2, wallPosition[1], 'z')]
+            for p in positions:
+                if p in self.board.walls:
+                    num = num+1
+                    if num == 2:
+                        # print("true")
+                        return True
+        type = 'p' if wallType == 'z' else 'z'
+        positions = [(wallPosition[0]-1, wallPosition[1]-1, type), (wallPosition[0]-1, wallPosition[1], type), (wallPosition[0]-1, wallPosition[1]+1, type),
+                     (wallPosition[0]+1, wallPosition[1]-1, type), (wallPosition[0]+1,
+                                                                    wallPosition[1], type), (wallPosition[0]+1, wallPosition[1]+1, type),
+                     (wallPosition[0], wallPosition[1]-1, type), (wallPosition[0], wallPosition[1]+1, type)]
+        for p in positions:
+            if p in self.board.walls:
+                num = num+1
+                if num == 2:
+                    # print("true")
+                    return True
+        # print("false")
+        return False
+
     def generateState(self, playerNumber, wallPosition, wallType, playerPosition):
         newGame = copy.deepcopy(self)
         newGame.changeBoardState(
@@ -167,6 +205,8 @@ class Game:
         newGame.isPlayerOneNext = not self.isPlayerOneNext
         newGame.playerToMove = "x" if newGame.playerToMove == "o" else "x"
         # provera da li zatvara
+        if not self.checkNewWall(wallPosition, wallType):
+            return newGame
         ai = blockade_ai.BlockadeAI(newGame)
         return newGame if ai.check_for_paths() else None
 
