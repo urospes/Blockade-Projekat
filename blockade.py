@@ -1,7 +1,4 @@
 import re
-import copy
-from itertools import product
-import blockade_ai
 
 
 class Player:
@@ -144,13 +141,13 @@ class Game:
                 )
                 self.isPlayerOneNext = not self.isPlayerOneNext """
 
-    def nextMove(self, playerNumber, wallPosition, wallType, playerType, playerPosition):
+    def nextMove(self, ai, playerNumber, wallPosition, wallType, playerType, playerPosition):
         if playerType != self.playerToMove:
             return False
 
         if self.isValidMove(playerNumber, playerType, list(playerPosition), wallPosition, wallType):
             # generise stanje i onda da se proveri da l zatvara, pa to stanje se salje u change
-            newState = self.generateState(
+            newState = ai.generateState(
                 playerNumber, wallPosition, wallType, playerPosition)
             if (newState):
                 self.changeBoardState(
@@ -160,14 +157,14 @@ class Game:
                 return True
         return False
 
-    def generateState(self, playerNumber, wallPosition, wallType, playerPosition):
+    """  def generateState(self, playerNumber, wallPosition, wallType, playerPosition):
         newGame = copy.deepcopy(self)
         newGame.changeBoardState(
             playerNumber, playerPosition, wallPosition, wallType, newGame.playerToMove)
         newGame.isPlayerOneNext = not self.isPlayerOneNext
         newGame.playerToMove = "x" if newGame.playerToMove == "o" else "x"
         # provera da li zatvara
-        ai = blockade_ai.BlockadeAI(newGame)
+        oldGame = .set_game(newGame)
         return newGame if ai.check_for_paths() else None
 
     def generateNextGameStates(self, game):
@@ -193,7 +190,9 @@ class Game:
                 lambda params: game.generateState(params[0], [], '', params[1]), player_moves)))
         # lista Game-ova sa novom pozicijom i dodatim zidom
 
-        return next_states
+        return next_states """
+
+
 
     def isValidMove(self, playerNumber, playerType, playerPosition, wallPosition, wallType):
         if playerNumber != 0 and playerNumber != 1 and playerType != "x" and playerType != "o":
@@ -366,3 +365,43 @@ class Game:
         walls = set(filter(lambda wall: game.isValidWallMove(
             player, [wall[0], wall[1]], wall[2]), walls))
         return walls
+    
+
+
+    def checkNewWall(self, wallPosition, wallType):
+        num = 0
+        if wallType == 'p':
+            if wallPosition[1] == 0 or wallPosition[1] == self.board.n-2:
+                num = num+1
+            positions = [(wallPosition[0], wallPosition[1]-2, 'p'),
+                         (wallPosition[0], wallPosition[1]+2, 'p')]
+            for p in positions:
+                if p in self.board.walls:
+                    num = num+1
+                    if num == 2:
+                        # print("true")
+                        return True
+        else:
+            if wallPosition[0] == 0 or wallPosition[0] == self.board.m-2:
+                num = num+1
+            positions = [(wallPosition[0]-2, wallPosition[1], 'z'),
+                         (wallPosition[0]+2, wallPosition[1], 'z')]
+            for p in positions:
+                if p in self.board.walls:
+                    num = num+1
+                    if num == 2:
+                        # print("true")
+                        return True
+        type = 'p' if wallType == 'z' else 'z'
+        positions = [(wallPosition[0]-1, wallPosition[1]-1, type), (wallPosition[0]-1, wallPosition[1], type), (wallPosition[0]-1, wallPosition[1]+1, type),
+                     (wallPosition[0]+1, wallPosition[1]-1, type), (wallPosition[0]+1,
+                                                                    wallPosition[1], type), (wallPosition[0]+1, wallPosition[1]+1, type),
+                     (wallPosition[0], wallPosition[1]-1, type), (wallPosition[0], wallPosition[1]+1, type)]
+        for p in positions:
+            if p in self.board.walls:
+                num = num+1
+                if num == 2:
+                    # print("true")
+                    return True
+        # print("false")
+        return False

@@ -1,8 +1,7 @@
 import pygame
-from pygame.constants import K_p
 import consts as const
 from sys import exit
-import blockade_ms as bl
+import blockade as bl
 from timeit import default_timer as timer
 from datetime import timedelta
 import blockade_ai as b_ai
@@ -12,7 +11,7 @@ pygame.init()
 game = bl.Game()
 game.getStartState()
 
-game.board.walls.add((7, 10, 'p'))
+""" game.board.walls.add((7, 10, 'p'))
 game.board.walls.add((3, 3, 'p'))
 game.board.walls.add((3, 9, 'p'))
 game.board.walls.add((3, 1, 'p'))
@@ -29,7 +28,7 @@ game.board.walls.add((7, 4, 'z'))
 game.board.walls.add((6, 9, 'z'))
 
 game.board.player1.positions = ([2, 0], [2, 2])
-game.board.player2.positions = ([1, 12], [2, 13])
+game.board.player2.positions = ([1, 12], [2, 13]) """
 
 const.SQUARE = 40 if game.board.m < 13 else 30 if game.board.m < 18 else 24
 const.WALL_W = 10 if game.board.m < 13 else 7
@@ -393,7 +392,7 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_g:
                 start = timer()
-                stanja = game.generateNextGameStates(game)
+                stanja = ai.generateNextGameStates(game)
                 end = timer()
                 print(str(timedelta(seconds=end - start)))
                 print(len(stanja))
@@ -405,8 +404,7 @@ while True:
             wall_type = move_state.wall_pos[2] if len(
                 move_state.wall_pos) != 0 else ''
             player_type = 'x' if move_state.red_to_move else 'o'
-            move_done = game.nextMove(
-                move_state.figure_num, wall_move_pos, wall_type, player_type, move_state.new_figure_pos)
+            move_done = game.nextMove(ai, move_state.figure_num, wall_move_pos, wall_type, player_type, move_state.new_figure_pos)
             if game.isEnd():
                 game_end = True
             else:
