@@ -327,3 +327,15 @@ class BlockadeAI:
 #                 end = timer()
 #                 print(str(timedelta(seconds=end - start)))
 #                 print(best_state)
+
+# ai=game.computerMove(ai)[0]
+# if game.isEnd():
+#     game_end = True
+
+
+### U BLOCKADE
+
+# def computerMove(self, ai):
+#     best_state= ai.minimax(1)
+#     self=best_state[0].game
+#     return best_state
