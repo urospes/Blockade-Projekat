@@ -1,6 +1,7 @@
 import copy
 from itertools import product
 import heapq
+from random import randint
 
 class BlockadeAI:
     def __init__(self, game):
@@ -280,3 +281,49 @@ class BlockadeAI:
         # lista Game-ova sa novom pozicijom i dodatim zidom
 
         return next_states
+
+
+    def evaluate_state(self):
+        return randint(-100, 100)
+
+    def max_value(self, game, depth, alpha, beta):
+        if depth == 0:
+            return (self, self.evaluate_state())
+        else:
+            for s in self.generateNextGameStates(game):
+                new_ai = BlockadeAI(s)
+                alpha = max(alpha,
+                        new_ai.min_value( s, depth - 1, alpha, beta),
+                        key=lambda x: x[1])
+                if alpha[1] >= beta[1]:
+                    return beta
+        return alpha
+
+    def min_value(self, game, depth, alpha, beta):
+        if depth == 0:
+            return (self, self.evaluate_state())
+        else:
+            for s in self.generateNextGameStates(game):
+                new_ai = BlockadeAI(s)
+                beta = min( beta,
+                new_ai.max_value( s, depth - 1, alpha, beta),
+                            key=lambda x: x[1])
+                if beta[1] <= alpha[1]:
+                    return alpha
+        return beta
+
+    def minimax(self,  dubina, alpha = (None, -101), beta = (None, 101)):
+        if self.game.isPlayerOneNext:
+            return self.max_value( self.game, dubina, alpha, beta)
+        else:
+            return self.min_value( self.game, dubina, alpha, beta)
+
+### U GUI
+
+#  if event.type == pygame.KEYDOWN:
+#             if event.key == pygame.K_m:
+#                 start = timer()
+#                 best_state=ai.minimax(2)
+#                 end = timer()
+#                 print(str(timedelta(seconds=end - start)))
+#                 print(best_state)
