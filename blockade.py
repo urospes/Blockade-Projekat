@@ -1,4 +1,5 @@
 import re
+import time
 
 
 class Player:
@@ -154,6 +155,9 @@ class Game:
                     playerNumber, playerPosition, wallPosition, wallType, playerType)
                 self.isPlayerOneNext = not self.isPlayerOneNext
                 self.playerToMove = "x" if self.playerToMove == "o" else "o"
+                #ovo dodajem
+                ai.check_for_paths()
+                #kraj dodavanja
                 return True
         return False
 
@@ -369,6 +373,10 @@ class Game:
 
 
     def checkNewWall(self, wallPosition, wallType):
+        #ovde idu provere za 2 i 3 i 4 zida, za 5 krecemo trazenje od svake figurice do oba ciljna polja
+        if len(self.board.walls) == 0:
+            return False
+
         num = 0
         if wallType == 'p':
             if wallPosition[1] == 0 or wallPosition[1] == self.board.n-2:
@@ -405,3 +413,9 @@ class Game:
                     return True
         # print("false")
         return False
+
+
+
+    def computerMove(self, ai, depth):
+        best_state = ai.minmax(self, depth, -10000, 10000, True)
+        return best_state[0]

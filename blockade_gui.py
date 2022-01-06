@@ -11,25 +11,6 @@ pygame.init()
 game = bl.Game()
 game.getStartState()
 
-""" game.board.walls.add((7, 10, 'p'))
-game.board.walls.add((3, 3, 'p'))
-game.board.walls.add((3, 9, 'p'))
-game.board.walls.add((3, 1, 'p'))
-game.board.walls.add((5, 10, 'p'))
-game.board.walls.add((6, 2, 'p'))
-
-game.board.walls.add((2, 1, 'z'))
-game.board.walls.add((2, 3, 'z'))
-game.board.walls.add((2, 9, 'z'))
-game.board.walls.add((3, 7, 'z'))
-game.board.walls.add((4, 4, 'z'))
-game.board.walls.add((5, 7, 'z'))
-game.board.walls.add((7, 4, 'z'))
-game.board.walls.add((6, 9, 'z'))
-
-game.board.player1.positions = ([2, 0], [2, 2])
-game.board.player2.positions = ([1, 12], [2, 13]) """
-
 const.SQUARE = 40 if game.board.m < 13 else 30 if game.board.m < 18 else 24
 const.WALL_W = 10 if game.board.m < 13 else 7
 const.WALL_H = 2 * const.SQUARE + const.WALL_W
@@ -371,9 +352,11 @@ game_end = False
 # move_state je lista koja pamti stanje poteza (prvi element pamti da li je izabran igrac kog zelimo da pomerimo, drugi element pamti da li je izabrano odredisno polje,
 # treci element pokazuje da li je izabran zid). Kada su sva tri elementa True, potez je odigran i prelazimo na drugog igraca
 MOVE_FINISHED = pygame.USEREVENT + 1
+COMP_MOVE = pygame.USEREVENT + 2
 
 move_state = MoveState(game, None)
 ai = b_ai.BlockadeAI(game)
+depth = 1
 while True:
 
     for event in pygame.event.get():
@@ -383,7 +366,17 @@ while True:
             exit()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            HandleClickEvent(event.pos, move_state)
+            if game.isPlayerOneNext:
+                HandleClickEvent(event.pos, move_state)
+
+        if event.type == COMP_MOVE:
+            game = game.computerMove(ai, depth)
+            ai.game = game
+            move_state.game = game
+            if game.isEnd():
+                game_end = True
+            else:
+                move_state.switch_players()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_k:
@@ -396,6 +389,17 @@ while True:
                 end = timer()
                 print(str(timedelta(seconds=end - start)))
                 print(len(stanja))
+        
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_m:
+                #count = [-1]
+                start = timer()
+                stanje = ai.minmax(game, 2, -10000, 10000, True)
+                end = timer()
+                print(str(timedelta(seconds=end - start)))
+                print(stanje[0].board.player1.positions)
+                print(stanje[0].board.player2.positions)
+                #print("Poseceno " + str(count[0]) + " stanja.")
 
         if event.type == MOVE_FINISHED:
             # igranje poteza
@@ -423,6 +427,9 @@ while True:
         move_state.board_info = board_info
         DrawPossibleMoves(move_state.valid_moves, move_state.new_figure_pos,
                           move_state.board_info["board_rect"])
+        
+        if not game.isPlayerOneNext:
+            pygame.event.post(pygame.event.Event(COMP_MOVE))
     else:
         PrintWinner(move_state.red_to_move)
 

@@ -10,6 +10,7 @@ class BlockadeAI:
         self.dist_yellow1 = dict()
         self.dist_yellow2 = dict()
         self.initialize_dists(self.game)
+        self.prev_paths = [set(), set()]
 
 
 
@@ -152,14 +153,6 @@ class BlockadeAI:
 
      #proveravamo da li zid blokira put do oba odredisna polja
     def check_for_paths(self) -> bool:
-        #ovde idu provere za 2 i 3 i 4 zida, za 5 krecemo trazenje od svake figurice do oba ciljna polja
-
-        if len(self.game.board.walls) == 1:
-            return True
-        #if len(self.game.board.walls) == 2:
-            #return
-            
-
         #trazenje puteva
         return self.check_all_paths(tuple(self.game.board.player1.positions[0]), tuple(self.game.board.player1.positions[1]), tuple(self.game.board.startPositionsO[0]), tuple(self.game.board.startPositionsO[1]), self.dist_yellow1, self.dist_yellow2) and \
         self.check_all_paths(tuple(self.game.board.player2.positions[0]), tuple(self.game.board.player2.positions[1]), tuple(self.game.board.startPositionsX[0]), tuple(self.game.board.startPositionsX[1]), self.dist_red1, self.dist_red2)
@@ -229,6 +222,8 @@ class BlockadeAI:
         else:
             res = self.check_for_path(p_pos2, s_dest2, h_dists2, paths)
 
+        if res[0] and len(self.prev_paths) < 2:
+            self.prev_paths.append(paths)
         return res[0]
     
 
@@ -239,12 +234,13 @@ class BlockadeAI:
         newGame.changeBoardState(
             playerNumber, playerPosition, wallPosition, wallType, newGame.playerToMove)
         newGame.isPlayerOneNext = not self.game.isPlayerOneNext
-        newGame.playerToMove = "x" if newGame.playerToMove == "o" else "x"
-
+        newGame.playerToMove = "x" if newGame.playerToMove == "o" else "o"
         
         # provera da li zatvara
         if not self.game.checkNewWall(wallPosition, wallType):
             return newGame
+        #if not self.wall_on_path(wallPosition, wallType):
+            #return newGame
 
         oldGame = self.set_game(newGame)
         if self.check_for_paths():
@@ -252,7 +248,6 @@ class BlockadeAI:
             return newGame
         self.set_game(oldGame)
         return None
-        #return newGame if self.check_for_paths() else None
 
 
 
@@ -280,3 +275,84 @@ class BlockadeAI:
         # lista Game-ova sa novom pozicijom i dodatim zidom
 
         return next_states
+
+
+
+
+    #proverava da li nam novi zid utice na nadjeni put. ukoliko ne utice, nema potrebe da ponovo proveravamo da li put postoji
+    def wall_on_path(self, wallPos, wallType) -> bool:
+        if wallType == 'p':
+            for i in range(0, 2):
+                if (wallPos[0] - 1, wallPos[1]) in self.prev_paths[i] and (wallPos[0] + 1, wallPos[1]) in self.prev_paths[i]:
+                    return True
+                if (wallPos[0], wallPos[1]) in self.prev_paths[i] and ((wallPos[0] + 2, wallPos[1]) in self.prev_paths[i] or (wallPos[0] + 1, wallPos[1] + 1) in self.prev_paths[i] or ((wallPos[0] + 1, wallPos[1] - 1) in self.prev_paths[i] and (wallPos[0] - 1, wallPos[1] - 1, 'z') in self.game.board.walls)):
+                    return True
+                if (wallPos[0] - 1, wallPos[1] + 1) in self.prev_paths[i] and (wallPos[0] + 1, wallPos[1] + 1) in self.prev_paths[i]:
+                    return True
+                if (wallPos[0], wallPos[1] + 1) in self.prev_paths[i] and ((wallPos[0] + 2, wallPos[1] + 1) in self.prev_paths[i] or (wallPos[0] + 1, wallPos[1]) in self.prev_paths[i] or ((wallPos[0] + 1, wallPos[1] + 2) in self.prev_paths[i] and  (wallPos[0] - 1, wallPos[1] + 1, 'z') in self.game.board.walls)):
+                    return True
+        else:
+            for i in range(0, 2):
+                if (wallPos[0], wallPos[1] - 1) in self.prev_paths[i] and (wallPos[0], wallPos[1] + 1) in self.prev_paths[i]:
+                    return True
+                if (wallPos[0], wallPos[1]) in self.prev_paths[i] and ((wallPos[0], wallPos[1] + 2) in self.prev_paths[i] or (wallPos[0] + 1, wallPos[1] + 1) in self.prev_paths[i]):
+                    return True
+                if (wallPos[0] + 1, wallPos[1] - 1) in self.prev_paths[i] and (wallPos[0] + 1, wallPos[1] + 1) in self.prev_paths[i]:
+                    return True
+                if (wallPos[0] + 1, wallPos[1]) in self.prev_paths[i] and ((wallPos[0] + 1, wallPos[1] + 2) in self.prev_paths[i] or (wallPos[0], wallPos[1] + 1) in self.prev_paths[i]):
+                    return True
+        return False
+
+
+
+
+
+    def minmax(self, state, depth, alpha, beta, max_move):
+        if depth == 0 or self.game.isEnd():
+            return (state, self.evaluate(state))
+        
+        best_move = None
+        #potez igraca koji maksimizuje efikasnost
+        if max_move:
+            max_val = float("-inf")
+            for next_state in self.generateNextGameStates(state):
+                next_val = self.minmax(next_state, depth - 1, alpha, beta, False)[1]
+                if max_val < next_val:
+                    max_val = next_val
+                    best_move = next_state
+                alpha = max(alpha, next_val)
+                if beta <= alpha:
+                    break
+            return (best_move, max_val)
+
+        else:
+            min_val = float("+inf")
+            for next_state in self.generateNextGameStates(state):
+                next_val = self.minmax(next_state, depth - 1, alpha, beta, True)[1]
+                if min_val > next_val:
+                   min_val = next_val
+                   best_move = next_state
+                beta = min(beta, next_val)
+                if beta <= alpha:
+                    break
+            return (best_move, min_val)
+
+    
+
+
+    def evaluate(self, state):
+        if self.game.playerToMove == 'o':
+            dist_f1 =  self.dist_red1[tuple(state.board.player2.positions[0])]
+            dist_f2 = self.dist_red2[tuple(state.board.player2.positions[1])]
+            dist_f3 = self.dist_red1[tuple(state.board.player2.positions[1])]
+            dist_f4 = self.dist_red2[tuple(state.board.player2.positions[0])]
+            return  100 - (dist_f1 + dist_f2 + dist_f3 + dist_f4)
+        
+        else:
+            dist_f1 =  self.dist_yellow1[tuple(state.board.player1.positions[0])]
+            dist_f2 = self.dist_yellow2[tuple(state.board.player1.positions[1])]
+            dist_f3 = self.dist_yellow1[tuple(state.board.player1.positions[1])]
+            dist_f4 = self.dist_yellow2[tuple(state.board.player1.positions[0])]
+            return  100 - (dist_f1 + dist_f2 + dist_f3 + dist_f4)
+
+        
