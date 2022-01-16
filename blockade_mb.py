@@ -1,7 +1,6 @@
 import copy
 from itertools import product
 import heapq
-from random import randint
 
 class BlockadeAI:
     def __init__(self, game):
@@ -282,60 +281,134 @@ class BlockadeAI:
 
         return next_states
 
+    def minmax(self, state, depth, alpha, beta, max_move):
+        if depth == 0 or self.game.isEnd():
+            return (state, self.evaluate(state))
+        
+        best_move = None
+        #potez igraca koji maksimizuje efikasnost
+        if max_move:
+            max_val = float("-inf")
+            for next_state in self.generateNextGameStates(state):
+                next_val = self.minmax(next_state, depth - 1, alpha, beta, False)[1]
+                if max_val < next_val:
+                    max_val = next_val
+                    best_move = next_state
+                alpha = max(alpha, next_val)
+                if beta <= alpha:
+                    break
+            return (best_move, max_val)
 
-    def evaluate_state(self):
-        return randint(-100, 100)
-
-    def max_value(self, game, depth, alpha, beta):
-        if depth == 0:
-            return (self, self.evaluate_state())
         else:
-            for s in self.generateNextGameStates(game):
-                new_ai = BlockadeAI(s)
-                alpha = max(alpha,
-                        new_ai.min_value( s, depth - 1, alpha, beta),
-                        key=lambda x: x[1])
-                if alpha[1] >= beta[1]:
-                    return beta
-        return alpha
+            min_val = float("+inf")
+            for next_state in self.generateNextGameStates(state):
+                next_val = self.minmax(next_state, depth - 1, alpha, beta, True)[1]
+                if min_val > next_val:
+                   min_val = next_val
+                   best_move = next_state
+                beta = min(beta, next_val)
+                if beta <= alpha:
+                    break
+            return (best_move, min_val)
 
-    def min_value(self, game, depth, alpha, beta):
-        if depth == 0:
-            return (self, self.evaluate_state())
+    
+
+
+    def evaluate(self, state):
+        if self.game.playerToMove == 'o':
+            dist_f1 =  self.dist_red1[tuple(state.board.player2.positions[0])]
+            dist_f2 = self.dist_red2[tuple(state.board.player2.positions[1])]
+            dist_f3 = self.dist_red1[tuple(state.board.player2.positions[1])]
+            dist_f4 = self.dist_red2[tuple(state.board.player2.positions[0])]
+            return  100 - (dist_f1 + dist_f2 + dist_f3 + dist_f4)
+        
         else:
-            for s in self.generateNextGameStates(game):
-                new_ai = BlockadeAI(s)
-                beta = min( beta,
-                new_ai.max_value( s, depth - 1, alpha, beta),
-                            key=lambda x: x[1])
-                if beta[1] <= alpha[1]:
-                    return alpha
-        return beta
-
-    def minimax(self,  dubina, alpha = (None, -101), beta = (None, 101)):
-        if self.game.isPlayerOneNext:
-            return self.max_value( self.game, dubina, alpha, beta)
-        else:
-            return self.min_value( self.game, dubina, alpha, beta)
-
-### U GUI
-
-#  if event.type == pygame.KEYDOWN:
-#             if event.key == pygame.K_m:
-#                 start = timer()
-#                 best_state=ai.minimax(2)
-#                 end = timer()
-#                 print(str(timedelta(seconds=end - start)))
-#                 print(best_state)
-
-# ai=game.computerMove(ai)[0]
-# if game.isEnd():
-#     game_end = True
+            dist_f1 =  self.dist_yellow1[tuple(state.board.player1.positions[0])]
+            dist_f2 = self.dist_yellow2[tuple(state.board.player1.positions[1])]
+            dist_f3 = self.dist_yellow1[tuple(state.board.player1.positions[1])]
+            dist_f4 = self.dist_yellow2[tuple(state.board.player1.positions[0])]
+            return  100 - (dist_f1 + dist_f2 + dist_f3 + dist_f4)
 
 
-### U BLOCKADE
+     # u blockade.py
+    def generate_wall_moves(self, game, green, blue):
+        walls = set()
+        for x in range(0, game.board.m - 1):
+            for y in range(0, game.board.n - 1):
+                if green:
+                    walls.add((x, y, "z"))
+                if blue:
+                    walls.add((x, y, "p"))
+        player = game.board.player1 if game.playerToMove == "x" else game.board.player2
+        walls = set(
+            filter(
+                lambda wall: game.isValidWallMove(player, [wall[0], wall[1]], wall[2]),
+                walls,
+            )
+        )
+        #izmena
+        if len(game.board.walls) != 0:
+            walls = set(
+                filter(
+                    lambda wall: game.filterWallMoves(wall[0], wall[1], wall[2]), walls
+                )
+            )
 
-# def computerMove(self, ai):
-#     best_state= ai.minimax(1)
-#     self=best_state[0].game
-#     return best_state
+        return walls
+
+    def filterWallMoves(self, x, y, type):
+
+        player = (
+            self.board.player1.positions
+            if self.playerToMove == "x"
+            else self.board.player2.positions
+        )
+        goal = (
+            self.board.startPositionsX
+            if self.playerToMove == "x"
+            else self.board.startPositionsO
+        )
+        size = 2  # self.board.m/4  if type=='z' else self.board.n/4
+        # ukoliko je blizu vrati true
+        if (
+            self.distance((x, y), goal[0]) < size
+            or self.distance((x, y), goal[1]) < size
+        ):
+            return True
+        if (
+            self.distance((x, y), player[0]) < size
+            or self.distance((x, y), player[1]) < size
+        ):
+            return True
+        # ne dodiruje sa drugim zidom
+        if type == "z":
+            if (
+                (x - 2, y, "z") in self.board.walls
+                or (x + 2, y, "z") in self.board.walls
+                or (x, y - 2, "z") in self.board.walls 
+                or (x,y ,"z") in self.board.walls
+                or (x-1, y - 2, "z") in self.board.walls 
+                or (x-1,y ,"z") in self.board.walls
+                or (x-2, y - 2, "z") in self.board.walls 
+                or (x-2,y ,"z") in self.board.walls
+            ):
+                return True
+        if type == "p":
+            if (
+                (x, y - 2, "p") in self.board.walls 
+                or (x,y + 2,"p") in self.board.walls
+                or (x, y, "p") in self.board.walls
+                or (x + 2, y, "p") in self.board.walls
+                or (x, y-1, "p") in self.board.walls
+                or (x + 2, y-1, "p") in self.board.walls
+                or (x, y-2, "p") in self.board.walls
+                or (x + 2, y-2, "p") in self.board.walls
+
+            ):
+                return True
+        return False
+
+    def distance(self, state, dest):
+        if state[0] - dest[0] == state[1] - dest[1]:
+            return abs(state[0] - dest[0])
+        return abs(state[0] - dest[0]) + abs(state[1] - dest[1])
