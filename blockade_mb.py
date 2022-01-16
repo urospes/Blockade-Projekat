@@ -418,8 +418,7 @@ class BlockadeAI:
     def computerMove(self, ai, depth):
         if ( self.board.player1.greenWallNumber==0 and self.board.player1.blueWallNumber==0 and  self.board.player2.greenWallNumber==0 and self.board.player2.blueWallNumber==0 ):
             best_state = ai.minmax(self, depth, -10000, 10000, True)
-            return best_state[0]
+            
         else:
-            states=ai.generateNextGameStates(self)
-            # heuristika
-            return states[0]
+           best_state = ai.minmax(self, 1, -10000, 10000, True)
+        return best_state[0]
