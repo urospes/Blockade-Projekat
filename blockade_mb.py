@@ -1,6 +1,7 @@
 import copy
 from itertools import product
 import heapq
+from random import randrange
 
 class BlockadeAI:
     def __init__(self, game):
@@ -241,10 +242,11 @@ class BlockadeAI:
         newGame.isPlayerOneNext = not self.game.isPlayerOneNext
         newGame.playerToMove = "x" if newGame.playerToMove == "o" else "x"
 
-        
+        # ako nema zidova
+        if (wallPosition and wallType!=''):
         # provera da li zatvara
-        if not self.game.checkNewWall(wallPosition, wallType):
-            return newGame
+            if not self.game.checkNewWall(wallPosition, wallType):
+                return newGame
 
         oldGame = self.set_game(newGame)
         if self.check_for_paths():
@@ -359,14 +361,14 @@ class BlockadeAI:
     def filterWallMoves(self, x, y, type):
 
         player = (
-            self.board.player1.positions
+            self.board.player2.positions
             if self.playerToMove == "x"
-            else self.board.player2.positions
+            else self.board.player1.positions
         )
         goal = (
-            self.board.startPositionsX
+            self.board.startPositionsO
             if self.playerToMove == "x"
-            else self.board.startPositionsO
+            else self.board.startPositionsY
         )
         size = 2  # self.board.m/4  if type=='z' else self.board.n/4
         # ukoliko je blizu vrati true
@@ -412,3 +414,12 @@ class BlockadeAI:
         if state[0] - dest[0] == state[1] - dest[1]:
             return abs(state[0] - dest[0])
         return abs(state[0] - dest[0]) + abs(state[1] - dest[1])
+
+    def computerMove(self, ai, depth):
+        if ( self.board.player1.greenWallNumber==0 and self.board.player1.blueWallNumber==0 and  self.board.player2.greenWallNumber==0 and self.board.player2.blueWallNumber==0 ):
+            best_state = ai.minmax(self, depth, -10000, 10000, True)
+            return best_state[0]
+        else:
+            states=ai.generateNextGameStates(self)
+            # heuristika
+            return states[0]
