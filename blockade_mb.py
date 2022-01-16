@@ -365,16 +365,16 @@ class BlockadeAI:
             if self.playerToMove == "x"
             else self.board.player1.positions
         )
-        goal = (
-            self.board.startPositionsO
+        start = (
+            self.board.startPositionsX
             if self.playerToMove == "x"
-            else self.board.startPositionsY
+            else self.board.startPositionsO
         )
-        size = 2  # self.board.m/4  if type=='z' else self.board.n/4
+        size = 1  # self.board.m/4  if type=='z' else self.board.n/4
         # ukoliko je blizu vrati true
         if (
-            self.distance((x, y), goal[0]) < size
-            or self.distance((x, y), goal[1]) < size
+            self.distance((x, y), start[0]) < size
+            or self.distance((x, y), start[1]) < size
         ):
             return True
         if (
