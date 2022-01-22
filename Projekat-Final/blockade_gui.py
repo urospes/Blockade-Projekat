@@ -410,7 +410,7 @@ while True:
                 end = timer()
                 print(str(timedelta(seconds=end - start)))
                 print(len(stanja))
-        
+
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_m:
                 #count = [-1]
@@ -429,7 +429,8 @@ while True:
             wall_type = move_state.wall_pos[2] if len(
                 move_state.wall_pos) != 0 else ''
             player_type = 'x' if move_state.red_to_move else 'o'
-            move_done = game.nextMove(ai, move_state.figure_num, wall_move_pos, wall_type, player_type, move_state.new_figure_pos)
+            move_done = game.nextMove(
+                ai, move_state.figure_num, wall_move_pos, wall_type, player_type, move_state.new_figure_pos)
             if game.isEnd():
                 game_end = True
             else:
@@ -448,9 +449,9 @@ while True:
         move_state.board_info = board_info
         DrawPossibleMoves(move_state.valid_moves, move_state.new_figure_pos,
                           move_state.board_info["board_rect"])
-        
+
         if not game.isPlayerOneNext:
-           pygame.event.post(pygame.event.Event(COMP_MOVE))
+            pygame.event.post(pygame.event.Event(COMP_MOVE))
     else:
         PrintWinner(move_state.red_to_move)
 
