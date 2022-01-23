@@ -229,27 +229,30 @@ class BlockadeAI:
         newGame.isPlayerOneNext = not game.isPlayerOneNext
         newGame.playerToMove = "x" if newGame.playerToMove == "o" else "o"
 
+        if (len(wallPosition) == 0 or wallType == ''):
+            return newGame
+
         # provera da li zatvara
-        """ if len(self.prev_paths[0]) > 0 and len(self.prev_paths[1]) > 0:
+        if len(self.prev_paths[0]) > 0 and len(self.prev_paths[1]) > 0:
             if not self.wall_on_path(wallPosition, wallType):
-                #return (newGame, [len(self.prev_paths[0]) - 1, len(self.prev_paths[1]) - 1])
                 return newGame
             self.prev_paths[0].clear()
-            self.prev_paths[1].clear() """
+            self.prev_paths[1].clear()
 
         if not game.checkNewWall(wallPosition, wallType):
-            # return (newGame, [len(self.prev_paths[0]), len(self.prev_paths[1])])
             return newGame
 
         oldGame = self.set_game(newGame)
         if self.check_for_paths():
             self.set_game(oldGame)
-            # return (newGame, [len(self.prev_paths[0]), len(self.prev_paths[1])])
             return newGame
         self.set_game(oldGame)
         return None
 
     def generateNextGameStates(self, game):
+        if game.isEnd():
+            return []
+
         next_states = []
         # koji je igrac na redu
         player = game.board.player1 if game.playerToMove == "x" else game.board.player2
@@ -329,7 +332,7 @@ class BlockadeAI:
 
     def minmax(self, state, depth, alpha, beta, max_move, prev_state):
 
-        if depth == 0 or self.game.isEnd():
+        if depth == 0 or state.isEnd():
             return (state, self.evaluate(state, prev_state[state]))
 
         best_move = None
@@ -427,8 +430,9 @@ class BlockadeAI:
             oBestLen = path2[1]
             oBestPath = path2[0]
 
+
         """ if state.playerToMove == 'x':
-            return 10 / oBestLen + xBestLen """
+            return 20 / oBestLen + xBestLen """
         return 20 / oBestLen + xBestLen
 
     def find_shortest(self, start_node, end_node, h_dists) -> bool:

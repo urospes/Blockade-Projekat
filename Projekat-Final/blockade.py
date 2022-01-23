@@ -369,12 +369,12 @@ class Game:
             player, [wall[0], wall[1]], wall[2]), walls))
         #return walls
         #ovdeee
-        """ if len(game.board.walls) != 0:
+        if len(game.board.walls) != 0:
             walls = set(
                 filter(
                     lambda wall: game.filterWallMoves(wall[0], wall[1], wall[2]), walls
                 )
-            ) """
+            )
         return walls
     
 
@@ -423,9 +423,21 @@ class Game:
 
 
 
-    def computerMove(self, ai, depth):
+    def computerMove(self, ai, depth1, depth2):
         prev_state = dict()
-        best_state = ai.minmax(self, depth, -10000, 10000, True, prev_state)
+        depth = depth1
+
+        if self.board.player1.greenWallNumber == 0 and self.board.player1.blueWallNumber == 0 \
+            and self.board.player2.greenWallNumber == 0 and self.board.player2.blueWallNumber == 0:
+            depth = depth2
+
+        max_player = None
+        if self.playerToMove == 'o':
+            max_player = True
+        else:
+            max_player = False
+
+        best_state = ai.minmax(self, depth, -10000, 10000, max_player, prev_state)
         return best_state[0]
     
 

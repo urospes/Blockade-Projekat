@@ -12,7 +12,7 @@ pygame.init()
 game = bl.Game()
 game.getStartState()
 
-game.board.walls.add((7, 10, 'p'))
+""" game.board.walls.add((7, 10, 'p'))
 game.board.walls.add((3, 3, 'p'))
 game.board.walls.add((3, 9, 'p'))
 game.board.walls.add((3, 1, 'p'))
@@ -29,7 +29,7 @@ game.board.walls.add((7, 4, 'z'))
 game.board.walls.add((6, 9, 'z'))
 
 game.board.player1.positions = ([2, 0], [2, 2])
-game.board.player2.positions = ([1, 12], [2, 13])
+game.board.player2.positions = ([1, 12], [2, 13]) """
 
 
 const.SQUARE = 40 if game.board.m < 13 else 30 if game.board.m < 18 else 24
@@ -377,7 +377,8 @@ COMP_MOVE = pygame.USEREVENT + 2
 
 move_state = MoveState(game, None)
 ai = b_ai.BlockadeAI(game)
-depth = 1
+depth1 = 2
+depth2 = 3
 while True:
 
     for event in pygame.event.get():
@@ -391,7 +392,7 @@ while True:
                 HandleClickEvent(event.pos, move_state)
 
         if event.type == COMP_MOVE:
-            game = copy.deepcopy(game.computerMove(ai, depth))
+            game = copy.deepcopy(game.computerMove(ai, depth1, depth2))
             ai.game = game
             move_state.game = game
             if game.isEnd():
@@ -410,17 +411,6 @@ while True:
                 end = timer()
                 print(str(timedelta(seconds=end - start)))
                 print(len(stanja))
-
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_m:
-                #count = [-1]
-                start = timer()
-                stanje = ai.minmax(game, 2, -10000, 10000, True)
-                end = timer()
-                print(str(timedelta(seconds=end - start)))
-                print(stanje[0].board.player1.positions)
-                print(stanje[0].board.player2.positions)
-                #print("Poseceno " + str(count[0]) + " stanja.")
 
         if event.type == MOVE_FINISHED:
             # igranje poteza
