@@ -29,8 +29,8 @@ game.board.walls.add((7, 4, 'z'))
 game.board.walls.add((6, 9, 'z'))
 
 game.board.player1.positions = ([2, 0], [2, 2])
-game.board.player2.positions = ([1, 12], [2, 13]) """
-
+game.board.player2.positions = ([1, 12], [2, 13])
+ """
 
 const.SQUARE = 40 if game.board.m < 13 else 30 if game.board.m < 18 else 24
 const.WALL_W = 10 if game.board.m < 13 else 7
@@ -377,8 +377,8 @@ COMP_MOVE = pygame.USEREVENT + 2
 
 move_state = MoveState(game, None)
 ai = b_ai.BlockadeAI(game)
-depth1 = 2
-depth2 = 3
+depth1 = 1
+depth2 = 5
 while True:
 
     for event in pygame.event.get():

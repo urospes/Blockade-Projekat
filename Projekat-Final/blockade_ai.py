@@ -35,7 +35,7 @@ class BlockadeAI:
 
     # generisanje mogucih poteza
 
-    def generate_figure_lines(self, stepXY, state, visited):
+    def generate_figure_lines(self, game, stepXY, state, visited):
         ret = list()
         pos = state
 
@@ -43,34 +43,34 @@ class BlockadeAI:
         if new_row < self.game.board.m:
             next_pos = (new_row, pos[1])
             if next_pos not in visited:
-                if not self.game.isBlockedByWall('p', pos, next_pos):
+                if not game.isBlockedByWall('p', pos, next_pos):
                     ret.append(next_pos)
 
         new_row = pos[0] - stepXY
         if new_row >= 0:
             next_pos = (new_row, pos[1])
             if next_pos not in visited:
-                if not self.game.isBlockedByWall('p', pos, next_pos):
+                if not game.isBlockedByWall('p', pos, next_pos):
                     ret.append(next_pos)
 
         new_col = pos[1] + stepXY
         if new_col < self.game.board.n:
             next_pos = (pos[0], new_col)
             if next_pos not in visited:
-                if not self.game.isBlockedByWall('z', pos, next_pos):
+                if not game.isBlockedByWall('z', pos, next_pos):
                     ret.append(next_pos)
 
         new_col = pos[1] - stepXY
         if new_col >= 0:
             next_pos = (pos[0], new_col)
             if next_pos not in visited:
-                if not self.game.isBlockedByWall('z', pos, next_pos):
+                if not game.isBlockedByWall('z', pos, next_pos):
                     ret.append(next_pos)
 
-        ret.extend(self.generate_figure_diagonal_lines(state, visited))
+        ret.extend(self.generate_figure_diagonal_lines(game, state, visited))
         return ret
 
-    def generate_figure_diagonal_lines(self, state, visited):
+    def generate_figure_diagonal_lines(self, game, state, visited):
         ret = list()
         pos = state
 
@@ -80,11 +80,11 @@ class BlockadeAI:
         if new_row >= 0 and new_col >= 0:
             next_pos = (new_row, new_col)
             if next_pos not in visited:
-                if self.game.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
-                    if not (self.game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.game.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
+                if game.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
+                    if not (game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or game.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
                         ret.append(next_pos)
-                elif self.game.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
-                    if not (self.game.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
+                elif game.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                    if not (game.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
                         ret.append(next_pos)
                 else:
                     ret.append(next_pos)
@@ -95,11 +95,11 @@ class BlockadeAI:
         if new_row >= 0 and new_col < self.game.board.n:
             next_pos = (new_row, new_col)
             if next_pos not in visited:
-                if self.game.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
-                    if not (self.game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.game.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
+                if game.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
+                    if not (game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or game.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
                         ret.append(next_pos)
-                elif self.game.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
-                    if not (self.game.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
+                elif game.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                    if not (game.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
                         ret.append(next_pos)
                 else:
                     ret.append(next_pos)
@@ -110,11 +110,11 @@ class BlockadeAI:
         if new_row < self.game.board.m and new_col >= 0:
             next_pos = (new_row, new_col)
             if next_pos not in visited:
-                if self.game.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
-                    if not (self.game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.game.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
+                if game.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
+                    if not (game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or game.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
                         ret.append(next_pos)
-                elif self.game.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
-                    if not (self.game.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
+                elif game.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                    if not (game.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
                         ret.append(next_pos)
                 else:
                     ret.append(next_pos)
@@ -125,11 +125,11 @@ class BlockadeAI:
         if new_row < self.game.board.m and new_col < self.game.board.n:
             next_pos = (new_row, new_col)
             if next_pos not in visited:
-                if self.game.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
-                    if not (self.game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or self.game.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
+                if game.isBlockedByWall("p", pos, (next_pos[0], pos[1])):
+                    if not (game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos) or game.isBlockedByWall("z", pos, (pos[0], next_pos[1]))):
                         ret.append(next_pos)
-                elif self.game.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
-                    if not (self.game.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or self.game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
+                elif game.isBlockedByWall("z", (next_pos[0], pos[1]), next_pos):
+                    if not (game.isBlockedByWall("z", pos, (pos[0], next_pos[1])) or game.isBlockedByWall("p", (pos[0], next_pos[1]), next_pos)):
                         ret.append(next_pos)
                 else:
                     ret.append(next_pos)
@@ -171,7 +171,7 @@ class BlockadeAI:
                 break
 
             stepXY = 1 if h_dists[state] == 1 else 2
-            for new_state in self.generate_figure_lines(stepXY, state, visited_nodes):
+            for new_state in self.generate_figure_lines(self.game, stepXY, state, visited_nodes):
                 if (h_dists[new_state], new_state) not in nodes_to_visit:
                     heapq.heappush(
                         nodes_to_visit, (h_dists[new_state], new_state))
@@ -229,12 +229,13 @@ class BlockadeAI:
         newGame.isPlayerOneNext = not game.isPlayerOneNext
         newGame.playerToMove = "x" if newGame.playerToMove == "o" else "o"
 
+
         if (len(wallPosition) == 0 or wallType == ''):
             return newGame
 
         # provera da li zatvara
         if len(self.prev_paths[0]) > 0 and len(self.prev_paths[1]) > 0:
-            if not self.wall_on_path(wallPosition, wallType):
+            if not self.wall_on_path(game, wallPosition, wallType):
                 return newGame
             self.prev_paths[0].clear()
             self.prev_paths[1].clear()
@@ -279,54 +280,54 @@ class BlockadeAI:
 
     # proverava da li nam novi zid utice na nadjeni put. ukoliko ne utice, nema potrebe da ponovo proveravamo da li put postoji
 
-    def wall_on_path(self, wallPos, wallType) -> bool:
+    def wall_on_path(self, game, wallPos, wallType) -> bool:
         if wallType == 'p':
             for i in range(0, 2):
                 if (wallPos[0] + 1, wallPos[1]) in self.prev_paths[i] and \
                     ((wallPos[0] - 1, wallPos[1]) in self.prev_paths[i] or
                      ((wallPos[0], wallPos[1]-1) in self.prev_paths[i] and
-                      ((wallPos[0]+1, wallPos[1]-1, 'z') in self.game.board.walls or (wallPos[0], wallPos[1] - 2, 'p') in self.game.board.walls))):
+                      ((wallPos[0]+1, wallPos[1]-1, 'z') in game.board.walls or (wallPos[0], wallPos[1] - 2, 'p') in game.board.walls))):
                     return True
                 if (wallPos[0], wallPos[1]) in self.prev_paths[i] and \
                     ((wallPos[0] + 2, wallPos[1]) in self.prev_paths[i] or
                      (wallPos[0] + 1, wallPos[1] + 1) in self.prev_paths[i] or
                      ((wallPos[0] + 1, wallPos[1] - 1) in self.prev_paths[i] and
-                     ((wallPos[0] - 1, wallPos[1] - 1, 'z') in self.game.board.walls or (wallPos[0], wallPos[1] - 2, 'p') in self.game.board.walls))):
+                     ((wallPos[0] - 1, wallPos[1] - 1, 'z') in game.board.walls or (wallPos[0], wallPos[1] - 2, 'p') in game.board.walls))):
                     return True
                 if (wallPos[0] + 1, wallPos[1] + 1) in self.prev_paths[i] and \
                     ((wallPos[0] - 1, wallPos[1] + 1) in self.prev_paths[i] or
                      ((wallPos[0], wallPos[1]+2) in self.prev_paths[i] and
-                      ((wallPos[0]+1, wallPos[1]+1, 'z') in self.game.board.walls or (wallPos[0], wallPos[1] + 2, 'p') in self.game.board.walls))):
+                      ((wallPos[0]+1, wallPos[1]+1, 'z') in game.board.walls or (wallPos[0], wallPos[1] + 2, 'p') in game.board.walls))):
                     return True
                 if (wallPos[0], wallPos[1] + 1) in self.prev_paths[i] and \
                     ((wallPos[0] + 2, wallPos[1] + 1) in self.prev_paths[i] or
                      (wallPos[0] + 1, wallPos[1]) in self.prev_paths[i] or
                      ((wallPos[0] + 1, wallPos[1] + 2) in self.prev_paths[i] and
-                     ((wallPos[0] - 1, wallPos[1] + 1, 'z') in self.game.board.walls or (wallPos[0], wallPos[1] + 2, 'p') in self.game.board.walls))):
+                     ((wallPos[0] - 1, wallPos[1] + 1, 'z') in game.board.walls or (wallPos[0], wallPos[1] + 2, 'p') in game.board.walls))):
                     return True
         else:
             for i in range(0, 2):
                 if (wallPos[0], wallPos[1] + 1) in self.prev_paths[i] and \
                     ((wallPos[0], wallPos[1] - 1) in self.prev_paths[i] or
                      ((wallPos[0]-1, wallPos[1]) in self.prev_paths[i] and
-                      ((wallPos[0] - 2, wallPos[1], 'z') in self.game.board.walls or (wallPos[0] - 1, wallPos[1]+1, 'p') in self.game.board.walls))):
+                      ((wallPos[0] - 2, wallPos[1], 'z') in game.board.walls or (wallPos[0] - 1, wallPos[1]+1, 'p') in game.board.walls))):
                     return True
                 if (wallPos[0], wallPos[1]) in self.prev_paths[i] and \
                     ((wallPos[0], wallPos[1] + 2) in self.prev_paths[i] or
                      (wallPos[0] + 1, wallPos[1] + 1) in self.prev_paths[i] or
                      ((wallPos[0] - 1, wallPos[1] + 1) in self.prev_paths[i] and
-                     ((wallPos[0] - 1, wallPos[1] - 1, 'p') in self.game.board.walls or (wallPos[0]-2, wallPos[1], 'z') in self.game.board.walls))):
+                     ((wallPos[0] - 1, wallPos[1] - 1, 'p') in game.board.walls or (wallPos[0]-2, wallPos[1], 'z') in game.board.walls))):
                     return True
                 if (wallPos[0] + 1, wallPos[1] + 1) in self.prev_paths[i] and \
                     ((wallPos[0] + 1, wallPos[1] - 1) in self.prev_paths[i] or
                      ((wallPos[0] + 2, wallPos[1]) in self.prev_paths[i] and
-                     ((wallPos[0] + 1, wallPos[1] + 1, 'p') in self.game.board.walls or (wallPos[0] + 2, wallPos[1], 'z') in self.game.board.walls))):
+                     ((wallPos[0] + 1, wallPos[1] + 1, 'p') in game.board.walls or (wallPos[0] + 2, wallPos[1], 'z') in game.board.walls))):
                     return True
                 if (wallPos[0] + 1, wallPos[1]) in self.prev_paths[i] and \
                     ((wallPos[0] + 1, wallPos[1] + 2) in self.prev_paths[i] or
                      (wallPos[0], wallPos[1] + 1) in self.prev_paths[i] or
                      ((wallPos[0] + 2, wallPos[1] + 1) in self.prev_paths[i] and
-                     ((wallPos[0] + 1, wallPos[1] - 1, 'p') in self.game.board.walls or (wallPos[0]+2, wallPos[1], 'z') in self.game.board.walls))):
+                     ((wallPos[0] + 1, wallPos[1] - 1, 'p') in game.board.walls or (wallPos[0]+2, wallPos[1], 'z') in game.board.walls))):
                     return True
         return False
 
@@ -365,10 +366,16 @@ class BlockadeAI:
                     break
             return (best_move, min_val)
 
+
+
     def evaluate(self, state, prev_state):
         end_node = None
         h_dists = None
         new_wall = state.board.walls.difference(prev_state.board.walls)
+        if len(new_wall) > 0:
+            new_wall = new_wall.pop()
+        else:
+            new_wall = None
 
         p1 = tuple(state.board.player1.positions[0])
         p2 = tuple(state.board.player1.positions[1])
@@ -380,7 +387,7 @@ class BlockadeAI:
             end_node = tuple(state.board.startPositionsO[1])
             h_dists = self.dist_yellow2
 
-        path1 = self.find_shortest(p1, end_node, h_dists)
+        path1 = self.find_shortest(state, p1, end_node, h_dists)
 
         if self.dist_yellow1[p2] < self.dist_yellow2[p2]:
             end_node = tuple(state.board.startPositionsO[0])
@@ -389,7 +396,7 @@ class BlockadeAI:
             end_node = tuple(state.board.startPositionsO[1])
             h_dists = self.dist_yellow2
 
-        path2 = self.find_shortest(p2, end_node, h_dists)
+        path2 = self.find_shortest(state, p2, end_node, h_dists)
 
         xBestLen = None
         xBestPath = None
@@ -410,7 +417,7 @@ class BlockadeAI:
             end_node = tuple(state.board.startPositionsX[1])
             h_dists = self.dist_red2
 
-        path1 = self.find_shortest(p1, end_node, h_dists)
+        path1 = self.find_shortest(state, p1, end_node, h_dists)
 
         if self.dist_red1[p2] < self.dist_red2[p2]:
             end_node = tuple(state.board.startPositionsX[0])
@@ -419,7 +426,7 @@ class BlockadeAI:
             end_node = tuple(state.board.startPositionsX[1])
             h_dists = self.dist_red2
 
-        path2 = self.find_shortest(p2, end_node, h_dists)
+        path2 = self.find_shortest(state, p2, end_node, h_dists)
 
         oBestPath = None
         oBestLen = None
@@ -430,12 +437,22 @@ class BlockadeAI:
             oBestLen = path2[1]
             oBestPath = path2[0]
 
+        """ return 20 / oBestLen + xBestLen """
+        new_wall_eval = 0.0
+        if(len(xBestPath) == 0):
+            print('greska')
+        
+        if(new_wall):
+            wall_dist = (abs(xBestPath[len(xBestPath) - 1][1] - new_wall[1]) if new_wall[2] == 'z' else abs(xBestPath[len(xBestPath) - 1][0] - new_wall[0]))
+            new_wall_eval = 5.0 / wall_dist if wall_dist != 0 else 5.0
+        path_eval = 50.0 / oBestLen +  5.0 * xBestLen
+        """ return float(path_eval) + float(new_wall_eval) """
+        return 200 - 5 * oBestLen + 5 * xBestLen
+        
 
-        """ if state.playerToMove == 'x':
-            return 20 / oBestLen + xBestLen """
-        return 20 / oBestLen + xBestLen
 
-    def find_shortest(self, start_node, end_node, h_dists) -> bool:
+
+    def find_shortest(self, game, start_node, end_node, h_dists) -> bool:
 
         found = False
         last_node = None
@@ -461,7 +478,7 @@ class BlockadeAI:
                 break
 
             stepXY = 1 if h_dists[state] == 1 else 2
-            for new_state in self.generate_figure_lines(stepXY, state, visited_nodes):
+            for new_state in self.generate_figure_lines(game, stepXY, state, visited_nodes):
                 if new_state not in nodes_to_visit:
                     g[new_state] = g[state] + stepXY
                     prev_nodes[new_state] = state

@@ -368,7 +368,7 @@ class Game:
         walls = set(filter(lambda wall: game.isValidWallMove(
             player, [wall[0], wall[1]], wall[2]), walls))
         #return walls
-        #ovdeee
+
         if len(game.board.walls) != 0:
             walls = set(
                 filter(
@@ -478,24 +478,28 @@ class Game:
             if (
                 (x - 2, y, "z") in self.board.walls
                 or (x + 2, y, "z") in self.board.walls
-                or (x, y - 2, "z") in self.board.walls 
-                or (x,y ,"z") in self.board.walls
-                or (x-1, y - 2, "z") in self.board.walls 
-                or (x-1,y ,"z") in self.board.walls
-                or (x-2, y - 2, "z") in self.board.walls 
-                or (x-2,y ,"z") in self.board.walls
+                or (x, y - 1, "p") in self.board.walls 
+                or (x - 1,y - 1,"p") in self.board.walls
+                or (x + 1, y - 1, "p") in self.board.walls 
+                or (x-1,y + 1 ,"p") in self.board.walls
+                or (x, y + 1, "p") in self.board.walls 
+                or (x+1,y+1 ,"p") in self.board.walls
+                or (x-1,y ,"p") in self.board.walls
+                or (x+1,y ,"p") in self.board.walls
             ):
                 return True
         if type == "p":
             if (
                 (x, y - 2, "p") in self.board.walls 
                 or (x,y + 2,"p") in self.board.walls
-                or (x, y, "p") in self.board.walls
-                or (x + 2, y, "p") in self.board.walls
-                or (x, y-1, "p") in self.board.walls
-                or (x + 2, y-1, "p") in self.board.walls
-                or (x, y-2, "p") in self.board.walls
-                or (x + 2, y-2, "p") in self.board.walls
+                or (x - 1, y - 1, "z") in self.board.walls
+                or (x, y - 1, "z") in self.board.walls
+                or (x + 1, y-1, "z") in self.board.walls
+                or (x - 1, y, "z") in self.board.walls
+                or (x + 1, y, "z") in self.board.walls
+                or (x - 1, y + 1, "z") in self.board.walls
+                or (x, y + 1, "z") in self.board.walls
+                or (x + 1, y + 1, "z") in self.board.walls
 
             ):
                 return True
