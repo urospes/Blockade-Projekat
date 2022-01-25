@@ -369,12 +369,12 @@ class Game:
             player, [wall[0], wall[1]], wall[2]), walls))
         #return walls
 
-        if len(game.board.walls) != 0:
+        """ if len(game.board.walls) != 0:
             walls = set(
                 filter(
                     lambda wall: game.filterWallMoves(wall[0], wall[1], wall[2]), walls
                 )
-            )
+            ) """
         return walls
     
 

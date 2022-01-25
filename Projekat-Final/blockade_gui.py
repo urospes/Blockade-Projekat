@@ -378,7 +378,7 @@ COMP_MOVE = pygame.USEREVENT + 2
 move_state = MoveState(game, None)
 ai = b_ai.BlockadeAI(game)
 depth1 = 1
-depth2 = 5
+depth2 = 4
 while True:
 
     for event in pygame.event.get():
