@@ -30,15 +30,15 @@ class Game:
     def getStartState(self):
         print("Unesite broj vrsta table :")
         m = int(input())
-        while m > 22 or m < 11:
+        """ while m > 22 or m < 11:
             print("Broj vrsta mora biti izmedju 11 i 22!")
-            m = int(input())
+            m = int(input()) """
 
         print("Unesite broj kolona table :")
         n = int(input())
-        while n > 28 or n < 14:
+        """ while n > 28 or n < 14:
             print("Broj kolona mora biti izmedju 14 i 28!")
-            n = int(input())
+            n = int(input()) """
 
         print("Unesite broj zidova : ")
         k = int(input())
@@ -148,53 +148,17 @@ class Game:
 
         if self.isValidMove(playerNumber, playerType, list(playerPosition), wallPosition, wallType):
             # generise stanje i onda da se proveri da l zatvara, pa to stanje se salje u change
-            newState = ai.generateState(
-                playerNumber, wallPosition, wallType, playerPosition)
+            newState = ai.generateState(self, playerNumber, wallPosition, wallType, playerPosition)
             if (newState):
                 self.changeBoardState(
                     playerNumber, playerPosition, wallPosition, wallType, playerType)
                 self.isPlayerOneNext = not self.isPlayerOneNext
                 self.playerToMove = "x" if self.playerToMove == "o" else "o"
                 #ovo dodajem
-                ai.check_for_paths()
+                #ai.check_for_paths()
                 #kraj dodavanja
                 return True
         return False
-
-    """  def generateState(self, playerNumber, wallPosition, wallType, playerPosition):
-        newGame = copy.deepcopy(self)
-        newGame.changeBoardState(
-            playerNumber, playerPosition, wallPosition, wallType, newGame.playerToMove)
-        newGame.isPlayerOneNext = not self.isPlayerOneNext
-        newGame.playerToMove = "x" if newGame.playerToMove == "o" else "x"
-        # provera da li zatvara
-        oldGame = .set_game(newGame)
-        return newGame if ai.check_for_paths() else None
-
-    def generateNextGameStates(self, game):
-        next_states = []
-        # koji je igrac na redu
-        player = game.board.player1 if game.playerToMove == "x" else game.board.player2
-        # potezi za svaku figuru
-        player0_moves = list(
-            map(lambda pair: (0, pair), game.generate_player_moves(0)))
-        player1_moves = list(
-            map(lambda pair: (1, pair), game.generate_player_moves(1)))
-        player_moves = [*player0_moves, *player1_moves]
-        # sve moguce pozicije za postavljanje zida, bilo plavi bilo zeleni - ukoliko je njihov br veci od 0
-        wall_moves = game.generate_wall_moves(
-            game, player.greenWallNumber, player.blueWallNumber)
-        # ((br igraca, pozicija), zid)
-        if (len(wall_moves) > 0):
-            next_states = list(product(player_moves, wall_moves))
-            next_states = list(filter(lambda state: state != None, map(lambda params: game.generateState(
-                params[0][0], [params[1][0], params[1][1]], params[1][2], params[0][1]), next_states)))
-        else:
-            next_states = list(filter(lambda state: state != None, map(
-                lambda params: game.generateState(params[0], [], '', params[1]), player_moves)))
-        # lista Game-ova sa novom pozicijom i dodatim zidom
-
-        return next_states """
 
 
 
@@ -234,13 +198,13 @@ class Game:
                 #print("Pozicije zida su van okvira table")
                 return False
             if wallType == "p":
-                if wallPosition[0] == self.board.m-1:
+                if wallPosition[0] == self.board.m-1 or wallPosition[1] == self.board.n-1:
                     return False
                 if (wallPosition[0], wallPosition[1]-1, 'p') in self.board.walls or (wallPosition[0], wallPosition[1]+1, 'p') in self.board.walls:
                     #print("Na tabli postoji zid koji zauzima ovu poziciju")
                     return False
             elif wallType == "z":
-                if wallPosition[1] == self.board.n-1:
+                if wallPosition[1] == self.board.n-1 or wallPosition[0] == self.board.m-1:
                     return False
                 if (wallPosition[0]-1, wallPosition[1], 'z') in self.board.walls or (wallPosition[0]+1, wallPosition[1], 'z') in self.board.walls:
                     #print("Na tabli postoji zid koji zauzima ovu poziciju")
@@ -368,6 +332,15 @@ class Game:
         player = game.board.player1 if game.playerToMove == "x" else game.board.player2
         walls = set(filter(lambda wall: game.isValidWallMove(
             player, [wall[0], wall[1]], wall[2]), walls))
+
+
+        # filtriranje za vece dubine
+        if len(game.board.walls) != 0:
+            walls = set(
+                filter(
+                    lambda wall: game.filterWallMoves(wall[0], wall[1], wall[2]), walls
+                )
+            )
         return walls
     
 
@@ -416,6 +389,89 @@ class Game:
 
 
 
-    def computerMove(self, ai, depth):
-        best_state = ai.minmax(self, depth, -10000, 10000, True)
+    def computerMove(self, ai, depth1, depth2):
+        prev_state = dict()
+        depth = depth1
+
+        if self.board.player1.greenWallNumber == 0 and self.board.player1.blueWallNumber == 0 \
+            and self.board.player2.greenWallNumber == 0 and self.board.player2.blueWallNumber == 0:
+            depth = depth2
+
+        max_player = None
+        if self.playerToMove == 'o':
+            max_player = True
+        else:
+            max_player = False
+
+        best_state = ai.minmax(self, depth, -10000, 10000, max_player, prev_state)
         return best_state[0]
+    
+
+
+
+
+
+
+
+
+
+    def filterWallMoves(self, x, y, type):
+
+        player = (
+            self.board.player2.positions
+            if self.playerToMove == "x"
+            else self.board.player1.positions
+        )
+        start = (
+            self.board.startPositionsX
+            if self.playerToMove == "x"
+            else self.board.startPositionsO
+        )
+        size = 1  # self.board.m/4  if type=='z' else self.board.n/4
+        # ukoliko je blizu vrati true
+        if (
+            self.distance((x, y), start[0]) < size
+            or self.distance((x, y), start[1]) < size
+        ):
+            return True
+        if (
+            self.distance((x, y), player[0]) < size
+            or self.distance((x, y), player[1]) < size
+        ):
+            return True
+        # ne dodiruje sa drugim zidom
+        if type == "z":
+            if (
+                (x - 2, y, "z") in self.board.walls
+                or (x + 2, y, "z") in self.board.walls
+                or (x, y - 1, "p") in self.board.walls 
+                or (x - 1,y - 1,"p") in self.board.walls
+                or (x + 1, y - 1, "p") in self.board.walls 
+                or (x-1,y + 1 ,"p") in self.board.walls
+                or (x, y + 1, "p") in self.board.walls 
+                or (x+1,y+1 ,"p") in self.board.walls
+                or (x-1,y ,"p") in self.board.walls
+                or (x+1,y ,"p") in self.board.walls
+            ):
+                return True
+        if type == "p":
+            if (
+                (x, y - 2, "p") in self.board.walls 
+                or (x,y + 2,"p") in self.board.walls
+                or (x - 1, y - 1, "z") in self.board.walls
+                or (x, y - 1, "z") in self.board.walls
+                or (x + 1, y-1, "z") in self.board.walls
+                or (x - 1, y, "z") in self.board.walls
+                or (x + 1, y, "z") in self.board.walls
+                or (x - 1, y + 1, "z") in self.board.walls
+                or (x, y + 1, "z") in self.board.walls
+                or (x + 1, y + 1, "z") in self.board.walls
+
+            ):
+                return True
+        return False
+
+    def distance(self, state, dest):
+        if state[0] - dest[0] == state[1] - dest[1]:
+            return abs(state[0] - dest[0])
+        return abs(state[0] - dest[0]) + abs(state[1] - dest[1])

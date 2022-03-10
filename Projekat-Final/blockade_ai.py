@@ -399,13 +399,10 @@ class BlockadeAI:
         path2 = self.find_shortest(state, p2, end_node, h_dists)
 
         xBestLen = None
-        xBestPath = None
         if path1[1] < path2[1]:
             xBestLen = path1[1]
-            xBestPath = path1[0]
         else:
             xBestLen = path2[1]
-            xBestPath = path2[0]
 
         p1 = tuple(state.board.player2.positions[0])
         p2 = tuple(state.board.player2.positions[1])
@@ -428,24 +425,12 @@ class BlockadeAI:
 
         path2 = self.find_shortest(state, p2, end_node, h_dists)
 
-        oBestPath = None
         oBestLen = None
         if path1[1] < path2[1]:
             oBestLen = path1[1]
-            oBestPath = path1[0]
         else:
             oBestLen = path2[1]
-            oBestPath = path2[0]
-
-        new_wall_eval = 0.0
-        if(len(xBestPath) == 0):
-            print('greska')
         
-        """ if(new_wall):
-            wall_dist = (abs(xBestPath[len(xBestPath) - 1][1] - new_wall[1]) if new_wall[2] == 'z' else abs(xBestPath[len(xBestPath) - 1][0] - new_wall[0]))
-            new_wall_eval = 5.0 / wall_dist if wall_dist != 0 else 5.0
-        path_eval = 50.0 / oBestLen +  5.0 * xBestLen """
-        """ return float(path_eval) + float(new_wall_eval) """
         return 200 - 5 * oBestLen + 5 * xBestLen
         
 
